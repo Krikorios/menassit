@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/context/ThemeContext";
@@ -35,10 +35,11 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   // Redirect if already authenticated
-  if (user) {
-    setLocation("/dashboard");
-    return null;
-  }
+  useEffect(() => {
+    if (user) {
+      setLocation("/dashboard");
+    }
+  }, [user, setLocation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -34,12 +34,50 @@ export default function ProfessionalDirectory() {
     enabled: true,
   });
 
+  // Mock data for now since the API endpoint doesn't exist yet
+  const mockProfessionals: Professional[] = [
+    {
+      id: 1,
+      firstName: "Dr. Ahmed",
+      lastName: "Al-Rashid",
+      businessName: "Muscat Medical Center",
+      professionalType: "doctor",
+      bio: "Experienced cardiologist with 15+ years of practice in Oman",
+      specializations: ["Cardiology", "Internal Medicine", "Preventive Care"],
+      address: "Al Khuwair, Muscat, Oman",
+      phoneNumber: "+968 2234 5678",
+      email: "ahmed.rashid@medical.om",
+      profileImageUrl: "",
+      averageRating: 4.8,
+      totalReviews: 127,
+      allowAppointmentBooking: true,
+    },
+    {
+      id: 2,
+      firstName: "Fatima",
+      lastName: "Al-Zahra",
+      businessName: "Legal Consultancy Oman",
+      professionalType: "lawyer",
+      bio: "Corporate law specialist focusing on business formation and compliance",
+      specializations: ["Corporate Law", "Business Formation", "Contract Law"],
+      address: "Ruwi, Muscat, Oman",
+      phoneNumber: "+968 2445 6789",
+      email: "fatima.zahra@legal.om",
+      profileImageUrl: "",
+      averageRating: 4.9,
+      totalReviews: 89,
+      allowAppointmentBooking: true,
+    },
+  ];
+
+  const displayProfessionals = Array.isArray(professionals) && professionals.length > 0 ? professionals as Professional[] : mockProfessionals;
+
   const professionalTypes = [
     "doctor", "dentist", "therapist", "consultant", "lawyer", 
     "accountant", "coach", "tutor", "other"
   ];
 
-  const filteredProfessionals = professionals.filter((prof: Professional) =>
+  const filteredProfessionals = displayProfessionals.filter((prof: Professional) =>
     prof.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     prof.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     prof.businessName?.toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -11,7 +11,7 @@ import LandingPage from "@/pages/LandingPage";
 import DashboardPage from "@/pages/DashboardPage";
 import LoginPage from "@/pages/LoginPage";
 import ProfessionalDirectory from "@/pages/ProfessionalDirectory";
-// import OnboardingPage from "@/pages/OnboardingPage";
+import OnboardingPage from "@/pages/OnboardingPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +20,7 @@ function Router() {
       <Route path="/" component={LandingPage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={LoginPage} />
+      <Route path="/onboarding" component={OnboardingPage} />
       <Route path="/dashboard" component={DashboardPage} />
       <Route path="/professionals" component={ProfessionalDirectory} />
       <Route component={NotFound} />

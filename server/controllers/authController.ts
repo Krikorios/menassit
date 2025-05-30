@@ -24,12 +24,20 @@ export const authController = {
       const saltRounds = 12;
       const hashedPassword = await bcrypt.hash(validatedData.password, saltRounds);
 
+      // Determine role - special handling for admin user
+      let userRole = "standard";
+      if (validatedData.email === "dev@adminlocal.com") {
+        userRole = "admin";
+      } else if (validatedData.role === "pro") {
+        userRole = "pro";
+      }
+
       // Create user
       const user = await storage.createUser({
         username: validatedData.username,
         email: validatedData.email,
         password: hashedPassword,
-        role: validatedData.role || 'standard',
+        role: userRole,
         firstName: validatedData.firstName,
         lastName: validatedData.lastName,
         onboardingComplete: false,

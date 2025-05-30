@@ -3,6 +3,23 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const professionalTypeEnum = pgEnum("professional_type", [
+  "doctor", "dentist", "therapist", "consultant", "lawyer", 
+  "accountant", "coach", "tutor", "other"
+]);
+
+export const dayOfWeekEnum = pgEnum("day_of_week", [
+  "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"
+]);
+
+export const appointmentStatusEnum = pgEnum("appointment_status", [
+  "pending", "confirmed", "cancelled", "completed", "no_show"
+]);
+
+export const connectionStatusEnum = pgEnum("connection_status", [
+  "pending", "accepted", "blocked"
+]);
+
 // Users table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -15,6 +32,21 @@ export const users = pgTable("users", {
   onboardingComplete: boolean("onboarding_complete").default(false),
   voiceEnabled: boolean("voice_enabled").default(true),
   ttsEnabled: boolean("tts_enabled").default(true),
+  
+  // Professional Profile Fields
+  isProfessional: boolean("is_professional").default(false).notNull(),
+  professionalType: professionalTypeEnum("professional_type"),
+  businessName: varchar("business_name", { length: 255 }),
+  bio: text("bio"),
+  specializations: text("specializations"), // JSON array as text
+  phoneNumber: varchar("phone_number", { length: 20 }),
+  address: text("address"),
+  
+  // Social & Discovery
+  isPublicProfile: boolean("is_public_profile").default(false).notNull(),
+  allowAppointmentBooking: boolean("allow_appointment_booking").default(false).notNull(),
+  profileImageUrl: varchar("profile_image_url", { length: 500 }),
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -196,6 +228,7 @@ export const loginSchema = z.object({
 });
 
 export const registerSchema = insertUserSchema.extend({
+  password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",

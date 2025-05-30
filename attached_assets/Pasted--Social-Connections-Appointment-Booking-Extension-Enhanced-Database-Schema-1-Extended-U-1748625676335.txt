@@ -1,0 +1,2892 @@
+# Social Connections & Appointment Booking Extension
+
+## Enhanced Database Schema
+
+### 1. Extended User Model (backend/src/models/user.ts)
+```typescript
+import { pgTable, serial, varchar, text, timestamp, pgEnum, boolean } from 'drizzle-orm/pg-core'
+import { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+
+export const userRoleEnum = pgEnum('user_role', ['standard', 'pro', 'dev'])
+export const professionalTypeEnum = pgEnum('professional_type', [
+  'doctor', 'dentist', 'therapist', 'consultant', 'lawyer', 
+  'accountant', 'coach', 'tutor', 'other'
+])
+
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  firstName: varchar('first_name', { length: 100 }),
+  lastName: varchar('last_name', { length: 100 }),
+  role: userRoleEnum('role').default('standard').notNull(),
+  
+  // Professional Profile Fields
+  isProfessional: boolean('is_professional').default(false).notNull(),
+  professionalType: professionalTypeEnum('professional_type'),
+  businessName: varchar('business_name', { length: 255 }),
+  bio: text('bio'),
+  specializations: text('specializations'), // JSON array as text
+  phoneNumber: varchar('phone_number', { length: 20 }),
+  address: text('address'),
+  
+  // Social & Discovery
+  isPublicProfile: boolean('is_public_profile').default(false).notNull(),
+  allowAppointmentBooking: boolean('allow_appointment_booking').default(false).notNull(),
+  profileImageUrl: varchar('profile_image_url', { length: 500 }),
+  
+  // Existing fields
+  isActive: varchar('is_active', { length: 10 }).default('true').notNull(),
+  lastLoginAt: timestamp('last_login_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export type User = InferSelectModel<typeof users>
+export type NewUser = InferInsertModel<typeof users>
+```
+
+### 2. Professional Availability Model (backend/src/models/availability.ts)
+```typescript
+import { pgTable, serial, integer, varchar, time, boolean, json } from 'drizzle-orm/pg-core'
+import { users } from './user.js'
+import { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+
+export const dayOfWeekEnum = pgEnum('day_of_week', [
+  'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'
+])
+
+export const availability = pgTable('availability', {
+  id: serial('id').primaryKey(),
+  professionalId: integer('professional_id').references(() => users.id).notNull(),
+  dayOfWeek: dayOfWeekEnum('day_of_week').notNull(),
+  startTime: time('start_time').notNull(),
+  endTime: time('end_time').notNull(),
+  isAvailable: boolean('is_available').default(true).notNull(),
+  slotDurationMinutes: integer('slot_duration_minutes').default(30).notNull(),
+  breakBetweenSlots: integer('break_between_slots').default(0).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export type Availability = InferSelectModel<typeof availability>
+export type NewAvailability = InferInsertModel<typeof availability>
+```
+
+### 3. Appointment Model (backend/src/models/appointment.ts)
+```typescript
+import { pgTable, serial, integer, varchar, text, timestamp, pgEnum, decimal } from 'drizzle-orm/pg-core'
+import { users } from './user.js'
+import { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+
+export const appointmentStatusEnum = pgEnum('appointment_status', [
+  'pending', 'confirmed', 'cancelled', 'completed', 'no_show'
+])
+
+export const appointments = pgTable('appointments', {
+  id: serial('id').primaryKey(),
+  professionalId: integer('professional_id').references(() => users.id).notNull(),
+  clientId: integer('client_id').references(() => users.id).notNull(),
+  
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  status: appointmentStatusEnum('status').default('pending').notNull(),
+  
+  scheduledDate: timestamp('scheduled_date').notNull(),
+  duration: integer('duration').notNull(), // minutes
+  
+  // Financial
+  price: decimal('price', { precision: 10, scale: 2 }),
+  currency: varchar('currency', { length: 3 }).default('USD'),
+  isPaid: boolean('is_paid').default(false).notNull(),
+  
+  // Contact info
+  clientEmail: varchar('client_email', { length: 255 }),
+  clientPhone: varchar('client_phone', { length: 20 }),
+  
+  // Notes
+  professionalNotes: text('professional_notes'),
+  clientNotes: text('client_notes'),
+  
+  // Timestamps
+  confirmedAt: timestamp('confirmed_at'),
+  completedAt: timestamp('completed_at'),
+  cancelledAt: timestamp('cancelled_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export type Appointment = InferSelectModel<typeof appointments>
+export type NewAppointment = InferInsertModel<typeof appointments>
+```
+
+### 4. Social Connections Model (backend/src/models/connection.ts)
+```typescript
+import { pgTable, serial, integer, varchar, text, timestamp, pgEnum } from 'drizzle-orm/pg-core'
+import { users } from './user.js'
+import { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+
+export const connectionStatusEnum = pgEnum('connection_status', [
+  'pending', 'accepted', 'blocked'
+])
+
+export const connections = pgTable('connections', {
+  id: serial('id').primaryKey(),
+  requesterId: integer('requester_id').references(() => users.id).notNull(),
+  receiverId: integer('receiver_id').references(() => users.id).notNull(),
+  status: connectionStatusEnum('status').default('pending').notNull(),
+  message: text('message'), // Optional message when sending connection request
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export type Connection = InferSelectModel<typeof connections>
+export type NewConnection = InferInsertModel<typeof connections>
+```
+
+### 5. Professional Reviews Model (backend/src/models/review.ts)
+```typescript
+import { pgTable, serial, integer, varchar, text, timestamp } from 'drizzle-orm/pg-core'
+import { users } from './user.js'
+import { appointments } from './appointment.js'
+import { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+
+export const reviews = pgTable('reviews', {
+  id: serial('id').primaryKey(),
+  professionalId: integer('professional_id').references(() => users.id).notNull(),
+  clientId: integer('client_id').references(() => users.id).notNull(),
+  appointmentId: integer('appointment_id').references(() => appointments.id),
+  
+  rating: integer('rating').notNull(), // 1-5 stars
+  title: varchar('title', { length: 255 }),
+  comment: text('comment'),
+  
+  isAnonymous: boolean('is_anonymous').default(false).notNull(),
+  isPublic: boolean('is_public').default(true).notNull(),
+  
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export type Review = InferSelectModel<typeof reviews>
+export type NewReview = InferInsertModel<typeof reviews>
+```
+
+## Backend API Extensions
+
+### 1. Professional Profile Controller (backend/src/controllers/professionalController.ts)
+```typescript
+import { Request, Response } from 'express'
+import { getDatabase } from '../config/database.js'
+import { users, availability, appointments, reviews } from '../models/index.js'
+import { eq, and, gte, desc, avg, count } from 'drizzle-orm'
+import { AuthenticatedRequest } from '../middleware/auth.js'
+import { asyncHandler, createError } from '../middleware/errorHandler.js'
+
+export const getProfessionalProfile = asyncHandler(async (req: Request, res: Response) => {
+  const { professionalId } = req.params
+  const db = getDatabase()
+
+  const [professional] = await db
+    .select({
+      id: users.id,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      businessName: users.businessName,
+      professionalType: users.professionalType,
+      bio: users.bio,
+      specializations: users.specializations,
+      phoneNumber: users.phoneNumber,
+      address: users.address,
+      profileImageUrl: users.profileImageUrl,
+      allowAppointmentBooking: users.allowAppointmentBooking,
+    })
+    .from(users)
+    .where(and(
+      eq(users.id, parseInt(professionalId)),
+      eq(users.isProfessional, true),
+      eq(users.isPublicProfile, true)
+    ))
+    .limit(1)
+
+  if (!professional) {
+    throw createError('Professional not found or profile not public', 404)
+  }
+
+  // Get availability
+  const professionalAvailability = await db
+    .select()
+    .from(availability)
+    .where(eq(availability.professionalId, parseInt(professionalId)))
+
+  // Get reviews stats
+  const [reviewStats] = await db
+    .select({
+      averageRating: avg(reviews.rating),
+      totalReviews: count(reviews.id)
+    })
+    .from(reviews)
+    .where(and(
+      eq(reviews.professionalId, parseInt(professionalId)),
+      eq(reviews.isPublic, true)
+    ))
+
+  // Get recent reviews
+  const recentReviews = await db
+    .select({
+      id: reviews.id,
+      rating: reviews.rating,
+      title: reviews.title,
+      comment: reviews.comment,
+      isAnonymous: reviews.isAnonymous,
+      createdAt: reviews.createdAt,
+      clientName: users.firstName
+    })
+    .from(reviews)
+    .leftJoin(users, eq(reviews.clientId, users.id))
+    .where(and(
+      eq(reviews.professionalId, parseInt(professionalId)),
+      eq(reviews.isPublic, true)
+    ))
+    .orderBy(desc(reviews.createdAt))
+    .limit(5)
+
+  res.json({
+    success: true,
+    professional: {
+      ...professional,
+      specializations: professional.specializations ? JSON.parse(professional.specializations) : []
+    },
+    availability: professionalAvailability,
+    stats: {
+      averageRating: reviewStats.averageRating ? Number(reviewStats.averageRating).toFixed(1) : null,
+      totalReviews: reviewStats.totalReviews || 0
+    },
+    recentReviews: recentReviews.map(review => ({
+      ...review,
+      clientName: review.isAnonymous ? 'Anonymous' : review.clientName
+    }))
+  })
+})
+
+export const searchProfessionals = asyncHandler(async (req: Request, res: Response) => {
+  const { type, location, specialization, page = 1, limit = 10 } = req.query
+  const db = getDatabase()
+
+  let query = db
+    .select({
+      id: users.id,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      businessName: users.businessName,
+      professionalType: users.professionalType,
+      bio: users.bio,
+      specializations: users.specializations,
+      address: users.address,
+      profileImageUrl: users.profileImageUrl,
+    })
+    .from(users)
+    .where(and(
+      eq(users.isProfessional, true),
+      eq(users.isPublicProfile, true),
+      eq(users.allowAppointmentBooking, true)
+    ))
+
+  // Add filters
+  if (type) {
+    query = query.where(eq(users.professionalType, type as string))
+  }
+
+  const professionals = await query
+    .limit(Number(limit))
+    .offset((Number(page) - 1) * Number(limit))
+
+  // Get ratings for each professional
+  const professionalsWithRatings = await Promise.all(
+    professionals.map(async (prof) => {
+      const [stats] = await db
+        .select({
+          averageRating: avg(reviews.rating),
+          totalReviews: count(reviews.id)
+        })
+        .from(reviews)
+        .where(eq(reviews.professionalId, prof.id))
+
+      return {
+        ...prof,
+        specializations: prof.specializations ? JSON.parse(prof.specializations) : [],
+        averageRating: stats.averageRating ? Number(stats.averageRating).toFixed(1) : null,
+        totalReviews: stats.totalReviews || 0
+      }
+    })
+  )
+
+  res.json({
+    success: true,
+    professionals: professionalsWithRatings,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      total: professionals.length
+    }
+  })
+})
+
+export const updateProfessionalProfile = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.user!.id
+  const {
+    isProfessional,
+    professionalType,
+    businessName,
+    bio,
+    specializations,
+    phoneNumber,
+    address,
+    isPublicProfile,
+    allowAppointmentBooking
+  } = req.body
+
+  const db = getDatabase()
+
+  const [updatedUser] = await db
+    .update(users)
+    .set({
+      isProfessional,
+      professionalType,
+      businessName,
+      bio,
+      specializations: specializations ? JSON.stringify(specializations) : null,
+      phoneNumber,
+      address,
+      isPublicProfile,
+      allowAppointmentBooking,
+      updatedAt: new Date()
+    })
+    .where(eq(users.id, userId))
+    .returning()
+
+  res.json({
+    success: true,
+    message: 'Professional profile updated successfully',
+    user: updatedUser
+  })
+})
+```
+
+### 2. Appointment Controller (backend/src/controllers/appointmentController.ts)
+```typescript
+import { Request, Response } from 'express'
+import { getDatabase } from '../config/database.js'
+import { appointments, users, availability } from '../models/index.js'
+import { eq, and, gte, lte, or } from 'drizzle-orm'
+import { AuthenticatedRequest } from '../middleware/auth.js'
+import { asyncHandler, createError } from '../middleware/errorHandler.js'
+
+export const getAvailableSlots = asyncHandler(async (req: Request, res: Response) => {
+  const { professionalId, date } = req.query
+  const db = getDatabase()
+
+  if (!professionalId || !date) {
+    throw createError('Professional ID and date are required', 400)
+  }
+
+  const requestedDate = new Date(date as string)
+  const dayOfWeek = requestedDate.toLocaleLowerCase().substring(0, 3) + 'day'
+
+  // Get professional's availability for the day
+  const professionalAvailability = await db
+    .select()
+    .from(availability)
+    .where(and(
+      eq(availability.professionalId, parseInt(professionalId as string)),
+      eq(availability.dayOfWeek, dayOfWeek as any),
+      eq(availability.isAvailable, true)
+    ))
+
+  if (professionalAvailability.length === 0) {
+    return res.json({
+      success: true,
+      slots: [],
+      message: 'No availability for this day'
+    })
+  }
+
+  // Get existing appointments for the date
+  const startOfDay = new Date(requestedDate)
+  startOfDay.setHours(0, 0, 0, 0)
+  const endOfDay = new Date(requestedDate)
+  endOfDay.setHours(23, 59, 59, 999)
+
+  const existingAppointments = await db
+    .select()
+    .from(appointments)
+    .where(and(
+      eq(appointments.professionalId, parseInt(professionalId as string)),
+      gte(appointments.scheduledDate, startOfDay),
+      lte(appointments.scheduledDate, endOfDay),
+      or(
+        eq(appointments.status, 'confirmed'),
+        eq(appointments.status, 'pending')
+      )
+    ))
+
+  // Generate available slots
+  const availableSlots: Array<{ time: string, available: boolean }> = []
+  
+  for (const avail of professionalAvailability) {
+    const startTime = new Date(`${date} ${avail.startTime}`)
+    const endTime = new Date(`${date} ${avail.endTime}`)
+    const slotDuration = avail.slotDurationMinutes || 30
+    const breakDuration = avail.breakBetweenSlots || 0
+
+    let currentTime = new Date(startTime)
+    
+    while (currentTime < endTime) {
+      const slotEnd = new Date(currentTime.getTime() + slotDuration * 60000)
+      
+      if (slotEnd <= endTime) {
+        const isBooked = existingAppointments.some(apt => {
+          const aptStart = new Date(apt.scheduledDate)
+          const aptEnd = new Date(aptStart.getTime() + apt.duration * 60000)
+          return (currentTime >= aptStart && currentTime < aptEnd) ||
+                 (slotEnd > aptStart && slotEnd <= aptEnd)
+        })
+
+        availableSlots.push({
+          time: currentTime.toTimeString().substring(0, 5),
+          available: !isBooked
+        })
+      }
+
+      currentTime = new Date(currentTime.getTime() + (slotDuration + breakDuration) * 60000)
+    }
+  }
+
+  res.json({
+    success: true,
+    date: date,
+    slots: availableSlots
+  })
+})
+
+export const bookAppointment = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const {
+    professionalId,
+    scheduledDate,
+    duration,
+    title,
+    description,
+    clientEmail,
+    clientPhone,
+    clientNotes
+  } = req.body
+
+  const clientId = req.user!.id
+  const db = getDatabase()
+
+  // Check if the slot is still available
+  const existingAppointment = await db
+    .select()
+    .from(appointments)
+    .where(and(
+      eq(appointments.professionalId, professionalId),
+      eq(appointments.scheduledDate, new Date(scheduledDate)),
+      or(
+        eq(appointments.status, 'confirmed'),
+        eq(appointments.status, 'pending')
+      )
+    ))
+    .limit(1)
+
+  if (existingAppointment.length > 0) {
+    throw createError('This time slot is no longer available', 409)
+  }
+
+  // Create appointment
+  const [newAppointment] = await db
+    .insert(appointments)
+    .values({
+      professionalId,
+      clientId,
+      scheduledDate: new Date(scheduledDate),
+      duration: duration || 30,
+      title,
+      description,
+      clientEmail,
+      clientPhone,
+      clientNotes,
+      status: 'pending'
+    })
+    .returning()
+
+  // Get professional and client info for response
+  const [professional] = await db
+    .select({
+      firstName: users.firstName,
+      lastName: users.lastName,
+      businessName: users.businessName,
+      email: users.email
+    })
+    .from(users)
+    .where(eq(users.id, professionalId))
+    .limit(1)
+
+  res.status(201).json({
+    success: true,
+    message: 'Appointment booked successfully',
+    appointment: newAppointment,
+    professional
+  })
+})
+
+export const getAppointments = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.user!.id
+  const { type = 'all', status, startDate, endDate } = req.query
+  const db = getDatabase()
+
+  let query = db
+    .select({
+      id: appointments.id,
+      title: appointments.title,
+      description: appointments.description,
+      status: appointments.status,
+      scheduledDate: appointments.scheduledDate,
+      duration: appointments.duration,
+      price: appointments.price,
+      isPaid: appointments.isPaid,
+      professionalNotes: appointments.professionalNotes,
+      clientNotes: appointments.clientNotes,
+      createdAt: appointments.createdAt,
+      // Professional info
+      professionalFirstName: users.firstName,
+      professionalLastName: users.lastName,
+      professionalBusinessName: users.businessName,
+      professionalEmail: users.email,
+      professionalPhone: users.phoneNumber,
+    })
+    .from(appointments)
+    .leftJoin(users, eq(appointments.professionalId, users.id))
+
+  // Filter by user type (as client or professional)
+  if (type === 'client') {
+    query = query.where(eq(appointments.clientId, userId))
+  } else if (type === 'professional') {
+    query = query.where(eq(appointments.professionalId, userId))
+  } else {
+    query = query.where(or(
+      eq(appointments.clientId, userId),
+      eq(appointments.professionalId, userId)
+    ))
+  }
+
+  // Add additional filters
+  if (status) {
+    query = query.where(eq(appointments.status, status as any))
+  }
+
+  if (startDate) {
+    query = query.where(gte(appointments.scheduledDate, new Date(startDate as string)))
+  }
+
+  if (endDate) {
+    query = query.where(lte(appointments.scheduledDate, new Date(endDate as string)))
+  }
+
+  const userAppointments = await query.orderBy(appointments.scheduledDate)
+
+  res.json({
+    success: true,
+    appointments: userAppointments
+  })
+})
+
+export const updateAppointmentStatus = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { appointmentId } = req.params
+  const { status, professionalNotes } = req.body
+  const userId = req.user!.id
+  const db = getDatabase()
+
+  // Check if user is the professional for this appointment
+  const [appointment] = await db
+    .select()
+    .from(appointments)
+    .where(eq(appointments.id, parseInt(appointmentId)))
+    .limit(1)
+
+  if (!appointment) {
+    throw createError('Appointment not found', 404)
+  }
+
+  if (appointment.professionalId !== userId) {
+    throw createError('Not authorized to update this appointment', 403)
+  }
+
+  const updateData: any = {
+    status,
+    updatedAt: new Date()
+  }
+
+  if (professionalNotes) {
+    updateData.professionalNotes = professionalNotes
+  }
+
+  if (status === 'confirmed') {
+    updateData.confirmedAt = new Date()
+  } else if (status === 'completed') {
+    updateData.completedAt = new Date()
+  } else if (status === 'cancelled') {
+    updateData.cancelledAt = new Date()
+  }
+
+  const [updatedAppointment] = await db
+    .update(appointments)
+    .set(updateData)
+    .where(eq(appointments.id, parseInt(appointmentId)))
+    .returning()
+
+  res.json({
+    success: true,
+    message: 'Appointment status updated successfully',
+    appointment: updatedAppointment
+  })
+})
+```
+
+## Frontend Extensions
+
+### 1. Professional Profile Page (frontend/src/pages/ProfessionalProfilePage.jsx)
+```jsx
+import React, { useState, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
+import { Calendar, Clock, Star, MapPin, Phone, Mail, User } from 'lucide-react'
+import { professionalService } from '../services/professionalService'
+import { appointmentService } from '../services/appointmentService'
+import LoadingSpinner from '../components/common/LoadingSpinner'
+import AppointmentBookingModal from '../components/appointments/AppointmentBookingModal'
+
+const ProfessionalProfilePage = () => {
+  const { professionalId } = useParams()
+  const [professional, setProfessional] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [showBookingModal, setShowBookingModal] = useState(false)
+  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedTime, setSelectedTime] = useState('')
+  const [availableSlots, setAvailableSlots] = useState([])
+
+  useEffect(() => {
+    if (professionalId) {
+      fetchProfessionalProfile()
+    }
+  }, [professionalId])
+
+  const fetchProfessionalProfile = async () => {
+    try {
+      const response = await professionalService.getProfessionalProfile(professionalId)
+      if (response.success) {
+        setProfessional(response.professional)
+      }
+    } catch (error) {
+      console.error('Failed to fetch professional profile:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchAvailableSlots = async (date) => {
+    try {
+      const response = await appointmentService.getAvailableSlots(professionalId, date)
+      if (response.success) {
+        setAvailableSlots(response.slots)
+      }
+    } catch (error) {
+      console.error('Failed to fetch available slots:', error)
+    }
+  }
+
+  const handleDateSelect = (date) => {
+    setSelectedDate(date)
+    fetchAvailableSlots(date)
+  }
+
+  const handleTimeSelect = (time) => {
+    setSelectedTime(time)
+    setShowBookingModal(true)
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="large" />
+      </div>
+    )
+  }
+
+  if (!professional) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Professional Not Found
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            The requested professional profile could not be found.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Professional Header */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mb-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
+            <div className="flex-shrink-0">
+              {professional.profileImageUrl ? (
+                <img
+                  src={professional.profileImageUrl}
+                  alt={`${professional.firstName} ${professional.lastName}`}
+                  className="w-24 h-24 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                  <User className="w-12 h-12 text-purple-600 dark:text-purple-400" />
+                </div>
+              )}
+            </div>
+            
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                {professional.businessName || `${professional.firstName} ${professional.lastName}`}
+              </h1>
+              <p className="text-lg text-purple-600 dark:text-purple-400 mb-2 capitalize">
+                {professional.professionalType}
+              </p>
+              
+              {/* Rating */}
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="flex items-center">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-5 h-5 ${
+                        i < Math.floor(professional.stats?.averageRating || 0)
+                          ? 'text-yellow-400 fill-current'
+                          : 'text-gray-300 dark:text-gray-600'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-gray-600 dark:text-gray-400">
+                  {professional.stats?.averageRating || 'No ratings'} 
+                  ({professional.stats?.totalReviews || 0} reviews)
+                </span>
+              </div>
+
+              {/* Specializations */}
+              {professional.specializations && professional.specializations.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {professional.specializations.map((spec, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full text-sm"
+                    >
+                      {spec}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Contact Info */}
+              <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
+                {professional.address && (
+                  <div className="flex items-center">
+                    <MapPin className="w-4 h-4 mr-1" />
+                    {professional.address}
+                  </div>
+                )}
+                {professional.phoneNumber && (
+                  <div className="flex items-center">
+                    <Phone className="w-4 h-4 mr-1" />
+                    {professional.phoneNumber}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex-shrink-0">
+              <button
+                onClick={() => setShowBookingModal(true)}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              >
+                Book Appointment
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - About & Reviews */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* About Section */}
+            {professional.bio && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">About</h2>
+                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                  {professional.bio}
+                </p>
+              </div>
+            )}
+
+            {/* Reviews Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Recent Reviews</h2>
+              {professional.recentReviews && professional.recentReviews.length > 0 ? (
+                <div className="space-y-4">
+                  {professional.recentReviews.map((review) => (
+                    <div key={review.id} className="border-l-4 border-purple-500 pl-4">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <div className="flex items-center">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i < review.rating
+                                  ? 'text-yellow-400 fill-current'
+                                  : 'text-gray-300 dark:text-gray-600'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          by {review.clientName} • {new Date(review.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {review.title && (
+                        <h4 className="font-medium text-gray-900 dark:text-white mb-1">
+                          {review.title}
+                        </h4>
+                      )}
+                      {review.comment && (
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">
+                          {review.comment}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400 text-center py-8">
+                  No reviews yet
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column - Availability */}
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                <Calendar className="w-5 h-5 inline mr-2" />
+                Availability
+              </h2>
+              
+              {professional.availability && professional.availability.length > 0 ? (
+                <div className="space-y-3">
+                  {professional.availability.map((avail) => (
+                    <div key={avail.id} className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                      <span className="capitalize text-gray-700 dark:text-gray-300">
+                        {avail.dayOfWeek}
+                      </span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {avail.startTime} - {avail.endTime}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+                  No availability set
+                </p>
+              )}
+            </div>
+
+            {/* Quick Stats */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Quick Stats</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Average Rating</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {professional.stats?.averageRating || 'N/A'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Total Reviews</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {professional.stats?.totalReviews || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Professional Type</span>
+                  <span className="font-medium text-gray-900 dark:text-white capitalize">
+                    {professional.professionalType}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Appointment Booking Modal */}
+      {showBookingModal && (
+        <AppointmentBookingModal
+          professionalId={professionalId}
+          professional={professional}
+          onClose={() => setShowBookingModal(false)}
+          onBooked={() => {
+            setShowBookingModal(false)
+            // Could show success message or redirect
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+export default ProfessionalProfilePage
+```
+
+### 2. Appointment Booking Modal (frontend/src/components/appointments/AppointmentBookingModal.jsx)
+```jsx
+import React, { useState, useEffect } from 'react'
+import { X, Calendar, Clock, User, Mail, Phone, MessageSquare } from 'lucide-react'
+import { appointmentService } from '../../services/appointmentService'
+import LoadingSpinner from '../common/LoadingSpinner'
+
+const AppointmentBookingModal = ({ professionalId, professional, onClose, onBooked }) => {
+  const [step, setStep] = useState(1) // 1: Date/Time, 2: Details, 3: Confirmation
+  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedTime, setSelectedTime] = useState('')
+  const [availableSlots, setAvailableSlots] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [bookingData, setBookingData] = useState({
+    title: '',
+    description: '',
+    clientEmail: '',
+    clientPhone: '',
+    clientNotes: '',
+    duration: 30
+  })
+
+  const [errors, setErrors] = useState({})
+
+  // Generate next 30 days for date selection
+  const getAvailableDates = () => {
+    const dates = []
+    const today = new Date()
+    
+    for (let i = 1; i <= 30; i++) {
+      const date = new Date(today)
+      date.setDate(today.getDate() + i)
+      
+      // Skip weekends if professional doesn't work weekends
+      const dayOfWeek = date.toLocaleDateString('en', { weekday: 'long' }).toLowerCase()
+      const hasAvailability = professional.availability?.some(
+        avail => avail.dayOfWeek === dayOfWeek && avail.isAvailable
+      )
+      
+      if (hasAvailability) {
+        dates.push({
+          date: date.toISOString().split('T')[0],
+          display: date.toLocaleDateString('en', { 
+            month: 'short', 
+            day: 'numeric',
+            weekday: 'short'
+          })
+        })
+      }
+    }
+    
+    return dates
+  }
+
+  const fetchAvailableSlots = async (date) => {
+    setLoading(true)
+    try {
+      const response = await appointmentService.getAvailableSlots(professionalId, date)
+      if (response.success) {
+        setAvailableSlots(response.slots || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch available slots:', error)
+      setAvailableSlots([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDateSelect = (date) => {
+    setSelectedDate(date)
+    setSelectedTime('')
+    fetchAvailableSlots(date)
+  }
+
+  const handleTimeSelect = (time) => {
+    setSelectedTime(time)
+  }
+
+  const handleInputChange = (field, value) => {
+    setBookingData(prev => ({ ...prev, [field]: value }))
+    // Clear error for this field
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }))
+    }
+  }
+
+  const validateStep2 = () => {
+    const newErrors = {}
+    
+    if (!bookingData.title.trim()) {
+      newErrors.title = 'Appointment title is required'
+    }
+    
+    if (!bookingData.clientEmail.trim()) {
+      newErrors.clientEmail = 'Email is required'
+    } else if (!/\S+@\S+\.\S+/.test(bookingData.clientEmail)) {
+      newErrors.clientEmail = 'Valid email is required'
+    }
+    
+    if (!bookingData.clientPhone.trim()) {
+      newErrors.clientPhone = 'Phone number is required'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleBookAppointment = async () => {
+    setLoading(true)
+    try {
+      const appointmentDateTime = new Date(`${selectedDate}T${selectedTime}:00`)
+      
+      const response = await appointmentService.bookAppointment({
+        professionalId: parseInt(professionalId),
+        scheduledDate: appointmentDateTime.toISOString(),
+        duration: bookingData.duration,
+        title: bookingData.title,
+        description: bookingData.description,
+        clientEmail: bookingData.clientEmail,
+        clientPhone: bookingData.clientPhone,
+        clientNotes: bookingData.clientNotes
+      })
+
+      if (response.success) {
+        setStep(3)
+        onBooked(response.appointment)
+      }
+    } catch (error) {
+      console.error('Failed to book appointment:', error)
+      alert('Failed to book appointment. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const nextStep = () => {
+    if (step === 1 && selectedDate && selectedTime) {
+      setStep(2)
+    } else if (step === 2 && validateStep2()) {
+      handleBookAppointment()
+    }
+  }
+
+  const availableDates = getAvailableDates()
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Book Appointment
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6">
+          {/* Professional Info */}
+          <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                <User className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 dark:text-white">
+                  {professional.businessName || `${professional.firstName} ${professional.lastName}`}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 capitalize">
+                  {professional.professionalType}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 1: Date and Time Selection */}
+          {step === 1 && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  <Calendar className="w-5 h-5 inline mr-2" />
+                  Select Date
+                </h3>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                  {availableDates.map((dateOption) => (
+                    <button
+                      key={dateOption.date}
+                      onClick={() => handleDateSelect(dateOption.date)}
+                      className={`p-3 text-center rounded-lg border transition-colors ${
+                        selectedDate === dateOption.date
+                          ? 'bg-purple-600 text-white border-purple-600'
+                          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-purple-400'
+                      }`}
+                    >
+                      <div className="text-sm font-medium">{dateOption.display}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {selectedDate && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    <Clock className="w-5 h-5 inline mr-2" />
+                    Select Time
+                  </h3>
+                  {loading ? (
+                    <div className="flex justify-center py-8">
+                      <LoadingSpinner />
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                      {availableSlots
+                        .filter(slot => slot.available)
+                        .map((slot) => (
+                          <button
+                            key={slot.time}
+                            onClick={() => handleTimeSelect(slot.time)}
+                            className={`p-3 text-center rounded-lg border transition-colors ${
+                              selectedTime === slot.time
+                                ? 'bg-purple-600 text-white border-purple-600'
+                                : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-purple-400'
+                            }`}
+                          >
+                            {slot.time}
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                  {availableSlots.length === 0 && !loading && (
+                    <p className="text-gray-500 dark:text-gray-400 text-center py-8">
+                      No available slots for this date
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 2: Appointment Details */}
+          {step === 2 && (
+            <div className="space-y-6">
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Selected: {new Date(selectedDate).toLocaleDateString('en', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })} at {selectedTime}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Appointment Title *
+                </label>
+                <input
+                  type="text"
+                  value={bookingData.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  className={`input-field ${errors.title ? 'border-red-500' : ''}`}
+                  placeholder="e.g., Regular Check-up, Consultation"
+                />
+                {errors.title && <p className="error-text mt-1">{errors.title}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={bookingData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  rows={3}
+                  className="input-field"
+                  placeholder="Brief description of your appointment needs..."
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    value={bookingData.clientEmail}
+                    onChange={(e) => handleInputChange('clientEmail', e.target.value)}
+                    className={`input-field ${errors.clientEmail ? 'border-red-500' : ''}`}
+                    placeholder="your@email.com"
+                  />
+                  {errors.clientEmail && <p className="error-text mt-1">{errors.clientEmail}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    value={bookingData.clientPhone}
+                    onChange={(e) => handleInputChange('clientPhone', e.target.value)}
+                    className={`input-field ${errors.clientPhone ? 'border-red-500' : ''}`}
+                    placeholder="+1 (555) 123-4567"
+                  />
+                  {errors.clientPhone && <p className="error-text mt-1">{errors.clientPhone}</p>}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Duration
+                </label>
+                <select
+                  value={bookingData.duration}
+                  onChange={(e) => handleInputChange('duration', parseInt(e.target.value))}
+                  className="input-field"
+                >
+                  <option value={15}>15 minutes</option>
+                  <option value={30}>30 minutes</option>
+                  <option value={45}>45 minutes</option>
+                  <option value={60}>1 hour</option>
+                  <option value={90}>1.5 hours</option>
+                  <option value={120}>2 hours</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Additional Notes
+                </label>
+                <textarea
+                  value={bookingData.clientNotes}
+                  onChange={(e) => handleInputChange('clientNotes', e.target.value)}
+                  rows={3}
+                  className="input-field"
+                  placeholder="Any additional information or special requests..."
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Confirmation */}
+          {step === 3 && (
+            <div className="text-center space-y-6">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto">
+                <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  Appointment Requested!
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Your appointment request has been sent to {professional.firstName}. 
+                  You'll receive a confirmation email once they approve your request.
+                </p>
+              </div>
+
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Appointment Details</h4>
+                <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                  <p><strong>Date:</strong> {new Date(selectedDate).toLocaleDateString()}</p>
+                  <p><strong>Time:</strong> {selectedTime}</p>
+                  <p><strong>Duration:</strong> {bookingData.duration} minutes</p>
+                  <p><strong>Title:</strong> {bookingData.title}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-2">
+            {[1, 2, 3].map((stepNum) => (
+              <div
+                key={stepNum}
+                className={`w-2 h-2 rounded-full ${
+                  stepNum <= step
+                    ? 'bg-purple-600'
+                    : 'bg-gray-300 dark:bg-gray-600'
+                }`}
+              />
+            ))}
+          </div>
+
+          <div className="flex space-x-3">
+            {step > 1 && step < 3 && (
+              <button
+                onClick={() => setStep(step - 1)}
+                className="btn-secondary"
+              >
+                Back
+              </button>
+            )}
+            
+            {step < 3 ? (
+              <button
+                onClick={nextStep}
+                disabled={
+                  loading || 
+                  (step === 1 && (!selectedDate || !selectedTime)) ||
+                  (step === 2 && (!bookingData.title || !bookingData.clientEmail || !bookingData.clientPhone))
+                }
+                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <LoadingSpinner size="small" className="mr-2" />
+                    {step === 2 ? 'Booking...' : 'Loading...'}
+                  </>
+                ) : (
+                  step === 1 ? 'Next' : 'Book Appointment'
+                )}
+              </button>
+            ) : (
+              <button onClick={onClose} className="btn-primary">
+                Close
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default AppointmentBookingModal
+```
+
+### 3. Professional Search Page (frontend/src/pages/ProfessionalSearchPage.jsx)
+```jsx
+import React, { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { Search, MapPin, Star, Filter, User } from 'lucide-react'
+import { professionalService } from '../services/professionalService'
+import LoadingSpinner from '../components/common/LoadingSpinner'
+
+const ProfessionalSearchPage = () => {
+  const [professionals, setProfessionals] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filters, setFilters] = useState({
+    type: '',
+    location: '',
+    specialization: ''
+  })
+  const [showFilters, setShowFilters] = useState(false)
+
+  const professionalTypes = [
+    'doctor', 'dentist', 'therapist', 'consultant', 
+    'lawyer', 'accountant', 'coach', 'tutor', 'other'
+  ]
+
+  useEffect(() => {
+    fetchProfessionals()
+  }, [filters])
+
+  const fetchProfessionals = async () => {
+    setLoading(true)
+    try {
+      const response = await professionalService.searchProfessionals(filters)
+      if (response.success) {
+        setProfessionals(response.professionals || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch professionals:', error)
+      setProfessionals([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }))
+  }
+
+  const filteredProfessionals = professionals.filter(prof => {
+    if (!searchQuery) return true
+    
+    const query = searchQuery.toLowerCase()
+    return (
+      prof.firstName?.toLowerCase().includes(query) ||
+      prof.lastName?.toLowerCase().includes(query) ||
+      prof.businessName?.toLowerCase().includes(query) ||
+      prof.specializations?.some(spec => spec.toLowerCase().includes(query))
+    )
+  })
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+            Find Professionals
+          </h1>
+          
+          {/* Search Bar */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name, business, or specialization..."
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+            </div>
+            
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="btn-secondary flex items-center space-x-2"
+            >
+              <Filter className="w-4 h-4" />
+              <span>Filters</span>
+            </button>
+          </div>
+
+          {/* Filters */}
+          {showFilters && (
+            <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Professional Type
+                  </label>
+                  <select
+                    value={filters.type}
+                    onChange={(e) => handleFilterChange('type', e.target.value)}
+                    className="input-field"
+                  >
+                    <option value="">All Types</option>
+                    {professionalTypes.map(type => (
+                      <option key={type} value={type} className="capitalize">
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    value={filters.location}
+                    onChange={(e) => handleFilterChange('location', e.target.value)}
+                    placeholder="City or area"
+                    className="input-field"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Specialization
+                  </label>
+                  <input
+                    type="text"
+                    value={filters.specialization}
+                    onChange={(e) => handleFilterChange('specialization', e.target.value)}
+                    placeholder="e.g., cardiology, tax"
+                    className="input-field"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Results */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <LoadingSpinner size="large" />
+          </div>
+        ) : (
+          <>
+            <div className="mb-6">
+              <p className="text-gray-600 dark:text-gray-400">
+                {filteredProfessionals.length} professional{filteredProfessionals.length !== 1 ? 's' : ''} found
+              </p>
+            </div>
+
+            {filteredProfessionals.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredProfessionals.map((professional) => (
+                  <div key={professional.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow p-6">
+                    <div className="flex items-start space-x-4">
+                      <div className="flex-shrink-0">
+                        {professional.profileImageUrl ? (
+                          <img
+                            src={professional.profileImageUrl}
+                            alt={`${professional.firstName} ${professional.lastName}`}
+                            className="w-16 h-16 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                            <User className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+                          {professional.businessName || `${professional.firstName} ${professional.lastName}`}
+                        </h3>
+                        <p className="text-purple-600 dark:text-purple-400 capitalize text-sm">
+                          {professional.professionalType}
+                        </p>
+                        
+                        {/* Rating */}
+                        <div className="flex items-center space-x-1 mt-2">
+                          <div className="flex items-center">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${
+                                  i < Math.floor(professional.averageRating || 0)
+                                    ? 'text-yellow-400 fill-current'
+                                    : 'text-gray-300 dark:text-gray-600'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {professional.averageRating || 'No ratings'} ({professional.totalReviews})
+                          </span>
+                        </div>
+                        
+                        {/* Location */}
+                        {professional.address && (
+                          <div className="flex items-center mt-2 text-sm text-gray-500 dark:text-gray-400">
+                            <MapPin className="w-4 h-4 mr-1" />
+                            <span className="truncate">{professional.address}</span>
+                          </div>
+                        )}
+                        
+                        {/* Specializations */}
+                        {professional.specializations && professional.specializations.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-1">
+                            {professional.specializations.slice(0, 2).map((spec, index) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded text-xs"
+                              >
+                                {spec}
+                              </span>
+                            ))}
+                            {professional.specializations.length > 2 && (
+                              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded text-xs">
+                                +{professional.specializations.length - 2} more
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Bio excerpt */}
+                        {professional.bio && (
+                          <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                            {professional.bio.length > 100 
+                              ? `${professional.bio.substring(0, 100)}...` 
+                              : professional.bio}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 flex space-x-2">
+                      <Link
+                        to={`/professional/${professional.id}`}
+                        className="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-center py-2 rounded-lg font-medium transition-colors"
+                      >
+                        View Profile
+                      </Link>
+                      <Link
+                        to={`/professional/${professional.id}?book=true`}
+                        className="flex-1 border border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 text-center py-2 rounded-lg font-medium transition-colors"
+                      >
+                        Book Now
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                  <Search className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  No professionals found
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Try adjusting your search criteria or filters
+                </p>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default ProfessionalSearchPage
+```
+
+### 4. Appointment Management Page (frontend/src/pages/AppointmentsPage.jsx)
+```jsx
+import React, { useState, useEffect } from 'react'
+import { Calendar, Clock, User, Phone, Mail, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { appointmentService } from '../services/appointmentService'
+import { useAuth } from '../context/AuthContext'
+import LoadingSpinner from '../components/common/LoadingSpinner'
+
+const AppointmentsPage = () => {
+  const { user } = useAuth()
+  const [appointments, setAppointments] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('all') // all, client, professional
+  const [statusFilter, setStatusFilter] = useState('all')
+
+  useEffect(() => {
+    fetchAppointments()
+  }, [activeTab, statusFilter])
+
+  const fetchAppointments = async () => {
+    setLoading(true)
+    try {
+      const response = await appointmentService.getAppointments({
+        type: activeTab,
+        status: statusFilter !== 'all' ? statusFilter : undefined
+      })
+      if (response.success) {
+        setAppointments(response.appointments || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch appointments:', error)
+      setAppointments([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleStatusUpdate = async (appointmentId, newStatus, notes = '') => {
+    try {
+      const response = await appointmentService.updateAppointmentStatus(appointmentId, {
+        status: newStatus,
+        professionalNotes: notes
+      })
+      
+      if (response.success) {
+        // Update local state
+        setAppointments(prev => 
+          prev.map(apt => 
+            apt.id === appointmentId 
+              ? { ...apt, status: newStatus, professionalNotes: notes }
+              : apt
+          )
+        )
+      }
+    } catch (error) {
+      console.error('Failed to update appointment status:', error)
+      alert('Failed to update appointment status')
+    }
+  }
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'confirmed':
+        return <CheckCircle className="w-5 h-5 text-green-500" />
+      case 'cancelled':
+        return <XCircle className="w-5 h-5 text-red-500" />
+      case 'completed':
+        return <CheckCircle className="w-5 h-5 text-blue-500" />
+      case 'pending':
+        return <AlertCircle className="w-5 h-5 text-yellow-500" />
+      default:
+        return <Clock className="w-5 h-5 text-gray-500" />
+    }
+  }
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'confirmed':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+      case 'cancelled':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+      case 'completed':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+    }
+  }
+
+  const isProfessional = user?.isProfessional
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            My Appointments
+          </h1>
+
+          {/* Tabs */}
+          <div className="flex space-x-1 bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'all'
+                  ? 'bg-white dark:bg-gray-800 text-purple-600 shadow'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              All Appointments
+            </button>
+            <button
+              onClick={() => setActiveTab('client')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'client'
+                  ? 'bg-white dark:bg-gray-800 text-purple-600 shadow'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              As Client
+            </button>
+            {isProfessional && (
+              <button
+                onClick={() => setActiveTab('professional')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === 'professional'
+                    ? 'bg-white dark:bg-gray-800 text-purple-600 shadow'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+              >
+                As Professional
+              </button>
+            )}
+          </div>
+
+          {/* Status Filter */}
+          <div className="mt-4 flex flex-wrap gap-2">
+            {['all', 'pending', 'confirmed', 'completed', 'cancelled'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  statusFilter === status
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                {status === 'all' ? 'All Status' : status.charAt(0).toUpperCase() + status.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <LoadingSpinner size="large" />
+          </div>
+        ) : appointments.length > 0 ? (
+          <div className="space-y-4">
+            {appointments.map((appointment) => (
+              <div key={appointment.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                          {appointment.title}
+                        </h3>
+                        <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+                          <div className="flex items-center">
+                            <Calendar className="w-4 h-4 mr-1" />
+                            {new Date(appointment.scheduledDate).toLocaleDateString('en', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </div>
+                          <div className="flex items-center">
+                            <Clock className="w-4 h-4 mr-1" />
+                            {new Date(appointment.scheduledDate).toLocaleTimeString('en', {
+                              hour: 'numeric',
+                              minute: '2-digit'
+                            })} ({appointment.duration} min)
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        {getStatusIcon(appointment.status)}
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(appointment.status)}`}>
+                          {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Professional/Client Info */}
+                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                          <User className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-gray-900 dark:text-white">
+                            {activeTab === 'professional' ? 'Client' : 'Professional'}
+                          </h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {appointment.professionalBusinessName || 
+                             `${appointment.professionalFirstName} ${appointment.professionalLastName}`}
+                          </p>
+                          <div className="flex items-center space-x-4 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            {appointment.professionalEmail && (
+                              <div className="flex items-center">
+                                <Mail className="w-3 h-3 mr-1" />
+                                {appointment.professionalEmail}
+                              </div>
+                            )}
+                            {appointment.professionalPhone && (
+                              <div className="flex items-center">
+                                <Phone className="w-3 h-3 mr-1" />
+                                {appointment.professionalPhone}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    {appointment.description && (
+                      <div className="mb-4">
+                        <h5 className="font-medium text-gray-900 dark:text-white mb-2">Description</h5>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">
+                          {appointment.description}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Notes */}
+                    {(appointment.clientNotes || appointment.professionalNotes) && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {appointment.clientNotes && (
+                          <div>
+                            <h5 className="font-medium text-gray-900 dark:text-white mb-2">Client Notes</h5>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm">
+                              {appointment.clientNotes}
+                            </p>
+                          </div>
+                        )}
+                        {appointment.professionalNotes && (
+                          <div>
+                            <h5 className="font-medium text-gray-900 dark:text-white mb-2">Professional Notes</h5>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm">
+                              {appointment.professionalNotes}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions for Professionals */}
+                  {activeTab === 'professional' && appointment.status === 'pending' && (
+                    <div className="mt-4 lg:mt-0 lg:ml-6 flex flex-col space-y-2">
+                      <button
+                        onClick={() => handleStatusUpdate(appointment.id, 'confirmed')}
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        onClick={() => {
+                          const reason = prompt('Reason for cancellation (optional):')
+                          handleStatusUpdate(appointment.id, 'cancelled', reason || '')
+                        }}
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Mark as Complete for Professionals */}
+                  {activeTab === 'professional' && appointment.status === 'confirmed' && (
+                    <div className="mt-4 lg:mt-0 lg:ml-6">
+                      <button
+                        onClick={() => {
+                          const notes = prompt('Session notes (optional):')
+                          handleStatusUpdate(appointment.id, 'completed', notes || '')
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      >
+                        Mark Complete
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+              <Calendar className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              No appointments found
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400">
+              {activeTab === 'client' 
+                ? "You haven't booked any appointments yet"
+                : activeTab === 'professional'
+                ? "No clients have booked appointments with you yet"
+                : "You don't have any appointments yet"
+              }
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default AppointmentsPage
+```
+
+### 5. API Services (frontend/src/services/)
+```javascript
+// frontend/src/services/professionalService.js
+import api from './api'
+
+export const professionalService = {
+  async searchProfessionals(filters = {}) {
+    try {
+      const params = new URLSearchParams()
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value)
+      })
+      
+      const response = await api.get(`/professionals/search?${params}`)
+      return {
+        success: true,
+        professionals: response.data.professionals,
+        pagination: response.data.pagination
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to search professionals'
+      }
+    }
+  },
+
+  async getProfessionalProfile(professionalId) {
+    try {
+      const response = await api.get(`/professionals/${professionalId}`)
+      return {
+        success: true,
+        ...response.data
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to get professional profile'
+      }
+    }
+  },
+
+  async updateProfessionalProfile(profileData) {
+    try {
+      const response = await api.put('/professionals/profile', profileData)
+      return {
+        success: true,
+        user: response.data.user
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to update professional profile'
+      }
+    }
+  }
+}
+
+// frontend/src/services/appointmentService.js
+import api from './api'
+
+export const appointmentService = {
+  async getAvailableSlots(professionalId, date) {
+    try {
+      const response = await api.get('/appointments/slots', {
+        params: { professionalId, date }
+      })
+      return {
+        success: true,
+        ...response.data
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to get available slots'
+      }
+    }
+  },
+
+  async bookAppointment(appointmentData) {
+    try {
+      const response = await api.post('/appointments', appointmentData)
+      return {
+        success: true,
+        appointment: response.data.appointment,
+        professional: response.data.professional
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to book appointment'
+      }
+    }
+  },
+
+  async getAppointments(filters = {}) {
+    try {
+      const params = new URLSearchParams()
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value)
+      })
+      
+      const response = await api.get(`/appointments?${params}`)
+      return {
+        success: true,
+        appointments: response.data.appointments
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to get appointments'
+      }
+    }
+  },
+
+  async updateAppointmentStatus(appointmentId, updateData) {
+    try {
+      const response = await api.patch(`/appointments/${appointmentId}/status`, updateData)
+      return {
+        success: true,
+        appointment: response.data.appointment
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to update appointment status'
+      }
+    }
+  }
+}
+```
+
+## Enhanced Database Migration
+
+### Updated Migration SQL (database/migrations/0001_social_features.sql)
+```sql
+-- Add social and appointment features to existing schema
+
+-- Add professional fields to users table
+ALTER TABLE users ADD COLUMN is_professional BOOLEAN DEFAULT FALSE NOT NULL;
+ALTER TABLE users ADD COLUMN professional_type VARCHAR(50);
+ALTER TABLE users ADD COLUMN business_name VARCHAR(255);
+ALTER TABLE users ADD COLUMN bio TEXT;
+ALTER TABLE users ADD COLUMN specializations TEXT; -- JSON array as text
+ALTER TABLE users ADD COLUMN phone_number VARCHAR(20);
+ALTER TABLE users ADD COLUMN address TEXT;
+ALTER TABLE users ADD COLUMN is_public_profile BOOLEAN DEFAULT FALSE NOT NULL;
+ALTER TABLE users ADD COLUMN allow_appointment_booking BOOLEAN DEFAULT FALSE NOT NULL;
+ALTER TABLE users ADD COLUMN profile_image_url VARCHAR(500);
+
+-- Create professional types enum
+CREATE TYPE professional_type AS ENUM('doctor', 'dentist', 'therapist', 'consultant', 'lawyer', 'accountant', 'coach', 'tutor', 'other');
+ALTER TABLE users ALTER COLUMN professional_type TYPE professional_type USING professional_type::professional_type;
+
+-- Create day of week enum
+CREATE TYPE day_of_week AS ENUM('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday');
+
+-- Create availability table
+CREATE TABLE availability (
+  id SERIAL PRIMARY KEY,
+  professional_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  day_of_week day_of_week NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  is_available BOOLEAN DEFAULT TRUE NOT NULL,
+  slot_duration_minutes INTEGER DEFAULT 30 NOT NULL,
+  break_between_slots INTEGER DEFAULT 0 NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+);
+
+-- Create appointment status enum
+CREATE TYPE appointment_status AS ENUM('pending', 'confirmed', 'cancelled', 'completed', 'no_show');
+
+-- Create appointments table
+CREATE TABLE appointments (
+  id SERIAL PRIMARY KEY,
+  professional_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  client_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  status appointment_status DEFAULT 'pending' NOT NULL,
+  scheduled_date TIMESTAMP NOT NULL,
+  duration INTEGER NOT NULL, -- minutes
+  price DECIMAL(10,2),
+  currency VARCHAR(3) DEFAULT 'USD',
+  is_paid BOOLEAN DEFAULT FALSE NOT NULL,
+  client_email VARCHAR(255),
+  client_phone VARCHAR(20),
+  professional_notes TEXT,
+  client_notes TEXT,
+  confirmed_at TIMESTAMP,
+  completed_at TIMESTAMP,
+  cancelled_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+);
+
+-- Create connection status enum
+CREATE TYPE connection_status AS ENUM('pending', 'accepted', 'blocked');
+
+-- Create connections table
+CREATE TABLE connections (
+  id SERIAL PRIMARY KEY,
+  requester_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  receiver_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status connection_status DEFAULT 'pending' NOT NULL,
+  message TEXT,
+  created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+  UNIQUE(requester_id, receiver_id)
+);
+
+-- Create reviews table
+CREATE TABLE reviews (
+  id SERIAL PRIMARY KEY,
+  professional_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  client_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  appointment_id INTEGER REFERENCES appointments(id) ON DELETE SET NULL,
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  title VARCHAR(255),
+  comment TEXT,
+  is_anonymous BOOLEAN DEFAULT FALSE NOT NULL,
+  is_public BOOLEAN DEFAULT TRUE NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+);
+
+-- Create indexes for better performance
+CREATE INDEX idx_users_professional ON users(is_professional, is_public_profile, allow_appointment_booking);
+CREATE INDEX idx_users_professional_type ON users(professional_type);
+CREATE INDEX idx_availability_professional ON availability(professional_id, day_of_week);
+CREATE INDEX idx_appointments_professional ON appointments(professional_id, scheduled_date);
+CREATE INDEX idx_appointments_client ON appointments(client_id, scheduled_date);
+CREATE INDEX idx_appointments_status ON appointments(status, scheduled_date);
+CREATE INDEX idx_connections_requester ON connections(requester_id, status);
+CREATE INDEX idx_connections_receiver ON connections(receiver_id, status);
+CREATE INDEX idx_reviews_professional ON reviews(professional_id, is_public);
+
+-- Create triggers for updated_at
+CREATE TRIGGER update_availability_updated_at BEFORE UPDATE
+  ON availability FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_appointments_updated_at BEFORE UPDATE
+  ON appointments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_connections_updated_at BEFORE UPDATE
+  ON connections FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_reviews_updated_at BEFORE UPDATE
+  ON reviews FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Sample data for development
+INSERT INTO users (email, password_hash, first_name, last_name, role, is_professional, professional_type, business_name, bio, specializations, phone_number, address, is_public_profile, allow_appointment_booking) VALUES
+('doctor@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPjU2LL2ckF4u', 'John', 'Smith', 'pro', true, 'doctor', 'Smith Medical Clinic', 'Experienced family physician with 15 years of practice.', '["Family Medicine", "Preventive Care", "Chronic Disease Management"]', '+1-555-0123', '123 Health St, Medical City, MC 12345', true, true),
+('dentist@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPjU2LL2ckF4u', 'Sarah', 'Johnson', 'pro', true, 'dentist', 'Bright Smile Dental', 'Caring dentist focused on comprehensive oral health.', '["General Dentistry", "Cosmetic Dentistry", "Oral Surgery"]', '+1-555-0124', '456 Dental Ave, Tooth Town, TT 67890', true, true);
+
+-- Sample availability
+INSERT INTO availability (professional_id, day_of_week, start_time, end_time, slot_duration_minutes) VALUES
+((SELECT id FROM users WHERE email = 'doctor@example.com'), 'monday', '09:00', '17:00', 30),
+((SELECT id FROM users WHERE email = 'doctor@example.com'), 'tuesday', '09:00', '17:00', 30),
+((SELECT id FROM users WHERE email = 'doctor@example.com'), 'wednesday', '09:00', '17:00', 30),
+((SELECT id FROM users WHERE email = 'doctor@example.com'), 'thursday', '09:00', '17:00', 30),
+((SELECT id FROM users WHERE email = 'doctor@example.com'), 'friday', '09:00', '17:00', 30),
+((SELECT id FROM users WHERE email = 'dentist@example.com'), 'monday', '08:00', '16:00', 60),
+((SELECT id FROM users WHERE email = 'dentist@example.com'), 'tuesday', '08:00', '16:00', 60),
+((SELECT id FROM users WHERE email = 'dentist@example.com'), 'wednesday', '08:00', '16:00', 60),
+((SELECT id FROM users WHERE email = 'dentist@example.com'), 'thursday', '08:00', '16:00', 60);
+```
+
+## Backend Routes Integration
+
+### 1. Professional Routes (backend/src/routes/professional.ts)
+```typescript
+import { Router } from 'express'
+import { body, param, query } from 'express-validator'
+import { 
+  getProfessionalProfile, 
+  searchProfessionals, 
+  updateProfessionalProfile 
+} from '../controllers/professionalController.js'
+import { authenticateToken, requireAuth } from '../middleware/auth.js'
+import { asyncHandler } from '../middleware/errorHandler.js'
+
+const router = Router()
+
+// Public routes
+router.get('/search', [
+  query('type').optional().isIn(['doctor', 'dentist', 'therapist', 'consultant', 'lawyer', 'accountant', 'coach', 'tutor', 'other']),
+  query('location').optional().isString(),
+  query('specialization').optional().isString(),
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 50 })
+], asyncHandler(searchProfessionals))
+
+router.get('/:professionalId', [
+  param('professionalId').isInt()
+], asyncHandler(getProfessionalProfile))
+
+// Protected routes
+router.put('/profile', authenticateToken, requireAuth, [
+  body('isProfessional').isBoolean(),
+  body('professionalType').optional().isIn(['doctor', 'dentist', 'therapist', 'consultant', 'lawyer', 'accountant', 'coach', 'tutor', 'other']),
+  body('businessName').optional().isString().trim().isLength({ max: 255 }),
+  body('bio').optional().isString().trim().isLength({ max: 2000 }),
+  body('specializations').optional().isArray(),
+  body('phoneNumber').optional().isString().trim().isLength({ max: 20 }),
+  body('address').optional().isString().trim().isLength({ max: 500 }),
+  body('isPublicProfile').isBoolean(),
+  body('allowAppointmentBooking').isBoolean()
+], asyncHandler(updateProfessionalProfile))
+
+export default router
+```
+
+### 2. Appointment Routes (backend/src/routes/appointments.ts)
+```typescript
+import { Router } from 'express'
+import { body, param, query } from 'express-validator'
+import { 
+  getAvailableSlots,
+  bookAppointment,
+  getAppointments,
+  updateAppointmentStatus
+} from '../controllers/appointmentController.js'
+import { authenticateToken, requireAuth } from '../middleware/auth.js'
+import { asyncHandler } from '../middleware/errorHandler.js'
+
+const router = Router()
+
+// All routes require authentication
+router.use(authenticateToken)
+router.use(requireAuth)
+
+// Get available slots for a professional on a specific date
+router.get('/slots', [
+  query('professionalId').isInt(),
+  query('date').isISO8601()
+], asyncHandler(getAvailableSlots))
+
+// Book an appointment
+router.post('/', [
+  body('professionalId').isInt(),
+  body('scheduledDate').isISO8601(),
+  body('duration').isInt({ min: 15, max: 480 }),
+  body('title').isString().trim().isLength({ min: 1, max: 255 }),
+  body('description').optional().isString().trim().isLength({ max: 1000 }),
+  body('clientEmail').isEmail(),
+  body('clientPhone').isString().trim().isLength({ min: 1, max: 20 }),
+  body('clientNotes').optional().isString().trim().isLength({ max: 1000 })
+], asyncHandler(bookAppointment))
+
+// Get user's appointments
+router.get('/', [
+  query('type').optional().isIn(['all', 'client', 'professional']),
+  query('status').optional().isIn(['pending', 'confirmed', 'cancelled', 'completed', 'no_show']),
+  query('startDate').optional().isISO8601(),
+  query('endDate').optional().isISO8601()
+], asyncHandler(getAppointments))
+
+// Update appointment status (professionals only)
+router.patch('/:appointmentId/status', [
+  param('appointmentId').isInt(),
+  body('status').isIn(['confirmed', 'cancelled', 'completed', 'no_show']),
+  body('professionalNotes').optional().isString().trim().isLength({ max: 1000 })
+], asyncHandler(updateAppointmentStatus))
+
+export default router
+```
+
+## Updated App Routing
+
+### Frontend App.jsx with New Routes
+```jsx
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
+import Layout from './components/layout/Layout'
+import LandingPage from './pages/LandingPage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import OnboardingPage from './pages/OnboardingPage'
+import DashboardPage from './pages/DashboardPage'
+import TasksPage from './pages/TasksPage'
+import FinancesPage from './pages/FinancesPage'
+import AdminPage from './pages/AdminPage'
+
+// New social/appointment pages
+import ProfessionalSearchPage from './pages/ProfessionalSearchPage'
+import ProfessionalProfilePage from './pages/ProfessionalProfilePage'
+import AppointmentsPage from './pages/AppointmentsPage'
+import ProfessionalSettingsPage from './pages/ProfessionalSettingsPage'
+
+import ProtectedRoute from './components/common/ProtectedRoute'
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/professionals" element={<ProfessionalSearchPage />} />
+              <Route path="/professional/:professionalId" element={<ProfessionalProfilePage />} />
+              
+              {/* Protected Routes */}
+              <Route path="/onboarding" element={
+                <ProtectedRoute>
+                  <OnboardingPage />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/app" element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<DashboardPage />} />
+                <Route path="tasks" element={<TasksPage />} />
+                <Route path="finances" element={<FinancesPage />} />
+                <Route path="appointments" element={<AppointmentsPage />} />
+                <Route path="professional-settings" element={<ProfessionalSettingsPage />} />
+                <Route path="admin" element={
+                  <ProtectedRoute requiredRole="dev">
+                    <AdminPage />
+                  </ProtectedRoute>
+                } />
+              </Route>
+            </Routes>
+          </div>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
+  )
+}
+
+export default App
+```
+
+## Professional Settings Page
+
+### Professional Profile Setup (frontend/src/pages/ProfessionalSettingsPage.jsx)
+```jsx
+import React, { useState, useEffect } from 'react'
+import { User, Building, Phone, MapPin, FileText, Star, Calendar } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import { professionalService } from '../services/professionalService'
+import LoadingSpinner from '../components/common/LoadingSpinner'
+
+const ProfessionalSettingsPage = () => {
+  const { user, checkAuthStatus } = useAuth()
+  const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    isProfessional: false,
+    professionalType: '',
+    businessName: '',
+    bio: '',
+    specializations: [],
+    phoneNumber: '',
+    address: '',
+    isPublicProfile: false,
+    allowAppointmentBooking: false
+  })
+  const [newSpecialization, setNewSpecialization] = useState('')
+  const [errors, setErrors] = useState({})
+  const [success, setSuccess] = useState('')
+
+  const professionalTypes = [
+    { value: 'doctor', label: 'Doctor' },
+    { value: 'dentist', label: 'Dentist' },
+    { value: 'therapist', label: 'Therapist' },
+    { value: 'consultant', label: 'Consultant' },
+    { value: 'lawyer', label: 'Lawyer' },
+    { value: 'accountant', label: 'Accountant' },
+    { value: 'coach', label: 'Coach' },
+    { value: 'tutor', label: 'Tutor' },
+    { value: 'other', label: 'Other' }
+  ]
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        isProfessional: user.isProfessional || false,
+        professionalType: user.professionalType || '',
+        businessName: user.businessName || '',
+        bio: user.bio || '',
+        specializations: user.specializations ? JSON.parse(user.specializations) : [],
+        phoneNumber: user.phoneNumber || '',
+        address: user.address || '',
+        isPublicProfile: user.isPublicProfile || false,
+        allowAppointmentBooking: user.allowAppointmentBooking || false
+      })
+    }
+  }, [user])
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }))
+    }
+    setSuccess('')
+  }
+
+  const addSpecialization = () => {
+    if (newSpecialization.trim() && !formData.specializations.includes(newSpecialization.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        specializations: [...prev.specializations, newSpecialization.trim()]
+      }))
+      setNewSpecialization('')
+    }
+  }
+
+  const removeSpecialization = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      specializations: prev.specializations.filter((_, i) => i !== index)
+    }))
+  }
+
+  const validateForm = () => {
+    const newErrors = {}
+
+    if (formData.isProfessional) {
+      if (!formData.professionalType) {
+        newErrors.professionalType = 'Professional type is required'
+      }
+      if (!formData.businessName.trim()) {
+        newErrors.businessName = 'Business name is required'
+      }
+      if (!formData.bio.trim()) {
+        newErrors.bio = 'Professional bio is required'
+      }
+      if (!formData.phoneNumber.trim()) {
+        newErrors.phoneNumber = 'Phone number is required'
+      }
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    
+    if (!validateForm()) return
+
+    setLoading(true)
+    try {
+      const response = await professionalService.updateProfessionalProfile(formData)
+      
+      if (response.success) {
+        setSuccess('Professional profile updated successfully!')
+        await checkAuthStatus() // Refresh user data
+      } else {
+        setErrors({ submit: response.error })
+      }
+    } catch (error) {
+      setErrors({ submit: 'Failed to update profile' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Professional Settings
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Set up your professional profile to start accepting appointments
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Professional Toggle */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <User className="w-6 h-6 text-purple-600" />
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Professional Status
+              </h2>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="isProfessional"
+                checked={formData.isProfessional}
+                onChange={(e) => handleInputChange('isProfessional', e.target.checked)}
+                className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 dark:focus:ring-purple-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              />
+              <label htmlFor="isProfessional" className="text-gray-900 dark:text-white font-medium">
+                I am a professional who wants to offer services and accept appointments
+              </label>
+            </div>
+            
+            {formData.isProfessional && (
+              <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                <p className="text-sm text-purple-800 dark:text-purple-200">
+                  <Star className="w-4 h-4 inline mr-1" />
+                  As a professional, you'll be able to set your availability, manage appointments, 
+                  and showcase your services to potential clients.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Professional Details */}
+          {formData.isProfessional && (
+            <>
+              {/* Basic Information */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <div className="flex items-center space-x-3 mb-6">
+                  <Building className="w-6 h-6 text-purple-600" />
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    Basic Information
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Professional Type *
+                    </label>
+                    <select
+                      value={formData.professionalType}
+                      onChange={(e) => handleInputChange('professionalType', e.target.value)}
+                      className={`input-field ${errors.professionalType ? 'border-red-500' : ''}`}
+                    >
+                      <option value="">Select your profession</option>
+                      {professionalTypes.map(type => (
+                        <option key={type.value} value={type.value}>
+                          {type.label}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.professionalType && (
+                      <p className="error-text mt-1">{errors.professionalType}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Business Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.businessName}
+                      onChange={(e) => handleInputChange('businessName', e.target.value)}
+                      className={`input-field ${errors.businessName ? 'border-red-500' : ''}`}
+                      placeholder="Your practice or business name"
+                    />
+                    {errors.businessName && (
+                      <p className="error-text mt-1">{errors.businessName}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Professional Bio *
+                  </label>
+                  <textarea
+                    value={formData.bio}
+                    onChange={(e) => handleInputChange('bio', e.target.value)}
+                    rows={4}
+                    className={`input-field ${errors.bio ? 'border-red-500' : ''}`}
+                    placeholder="Tell potential clients about your experience, qualifications, and approach..."
+                  />
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {formData.bio.length}/2000 characters
+                  </p>
+                  {errors.bio && (
+                    <p className="error-text mt-1">{errors.bio}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <div className="flex items-center space-x-3 mb-6">
+                  <Phone className="w-6 h-6 text-purple-600" />
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    Contact Information
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.phoneNumber}
+                      onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                      className={`input-field ${errors.phoneNumber ? 'border-red-500' : ''}`}
+                      placeholder="+1 (555) 123-4567"
+                    />
+                    {errors.phoneNumber && (
+                      <p className="error-text mt-1">{errors.phoneNumber}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Business Address
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.address}
+                      onChange={(e) => handleInputChange('address', e.target.value)}
+                      className="input-field"
+                      placeholder="123 Main St, City, State 12345"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Specializations */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <div className="flex items-center space-x-3 mb-6">
+                  <FileText className="w-6 h-6 text-purple-600" />
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    Specializations
+                  </h2>
+                </div>
+
+                <div className="mb-4">
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={newSpecialization}
+                      onChange={(e) => setNewSpecialization(e.target.value)}
+                      className="input-field flex-1"
+                      placeholder="Add a specialization..."
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSpecialization())}
+                    />
+                    <button
+                      type="button"
+                      onClick={addSpecialization}
+                      className="btn-primary"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+
+                {formData.specializations.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {formData.specializations.map((spec, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200"
+                      >
+                        {spec}
+                        <button
+                          type="button"
+                          onClick={() => removeSpecialization(index)}
+                          className="ml-2 text-purple-600 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-100"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Visibility Settings */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <div className="flex items-center space-x-3 mb-6">
+                  <Calendar className="w-6 h-6 text-purple-600" />
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    Visibility & Booking Settings
+                  </h2>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      id="isPublicProfile"
+                      checked={formData.isPublicProfile}
+                      onChange={(e) => handleInputChange('isPublicProfile', e.target.checked)}
+                      className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500"
+                    />
+                    <label htmlFor="isPublicProfile" className="text-gray-900 dark:text-white">
+                      Make my profile public and searchable
+                    </label>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      id="allowAppointmentBooking"
+                      checked={formData.allowAppointmentBooking}
+                      onChange={(e) => handleInputChange('allowAppointmentBooking', e.target.checked)}
+                      className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500"
+                    />
+                    <label htmlFor="allowAppointmentBooking" className="text-gray-900 dark:text-white">
+                      Allow clients to book appointments online
+                    </label>
+                  </div>
+                </div>
+
+                <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <strong>Note:</strong> To accept appointments, you'll need to set up your availability 
+                    schedule. This can be configured after saving your profile.
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Submit Button */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            {success && (
+              <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <p className="text-green-800 dark:text-green-200">{success}</p>
+              </div>
+            )}
+
+            {errors.submit && (
+              <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <p className="text-red-800 dark:text-red-200">{errors.submit}</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <LoadingSpinner size="small" className="mr-2" />
+                  Updating Profile...
+                </>
+              ) : (
+                'Save Professional Profile'
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+export default ProfessionalSettingsPage
+```
+
+This comprehensive extension adds powerful **social connections and appointment booking** functionality to your TaskFin AI Suite:
+
+## 🎯 **Key Features Added:**
+
+1. **Professional Profiles** - Doctors and other professionals can set up detailed profiles
+2. **Public Directory** - Searchable professional listings with ratings and reviews
+3. **Appointment Booking** - Complete booking system with time slot management
+4. **Availability Management** - Professionals can set their working hours and slot durations
+5. **Appointment Management** - Full lifecycle management (pending → confirmed → completed)
+6. **Social Reviews** - Client feedback and rating system
+7. **Connection System** - Professional networking capabilities
+
+## 🏥 **Perfect for Healthcare & Professional Services:**
+
+- **Doctors** can manage their schedules and patient appointments
+- **Patients** can easily find and book appointments with healthcare providers
+- **Financial integration** with existing expense tracking
+- **AI-powered** appointment reminders and scheduling optimization
+- **Complete privacy** - all data stays on-premise
+
+The system now supports the exact use case you mentioned - doctors can manage their schedules while patients can discover and book appointments with them, all while maintaining the powerful task management and financial features you already have! 🚀

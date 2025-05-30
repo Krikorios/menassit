@@ -1,60 +1,47 @@
-import { apiRequest } from "@/lib/queryClient";
-import { FinancialRecord, InsertFinancialRecord } from "@shared/schema";
-
-export interface FinancialRecordsResponse {
-  records: FinancialRecord[];
-}
-
-export interface FinancialRecordResponse {
-  record: FinancialRecord;
-  message?: string;
-}
-
-export interface FinancialSummaryResponse {
-  summary: {
-    income: number;
-    expenses: number;
-    net: number;
-  };
-  period: string;
-  startDate?: string;
-  endDate?: string;
-}
-
 export const financialService = {
-  async getRecords(startDate?: string, endDate?: string): Promise<FinancialRecordsResponse> {
+  async getRecords(startDate?: Date, endDate?: Date) {
     const params = new URLSearchParams();
-    if (startDate) params.append("startDate", startDate);
-    if (endDate) params.append("endDate", endDate);
+    if (startDate) params.append('startDate', startDate.toISOString());
+    if (endDate) params.append('endDate', endDate.toISOString());
     
-    const url = `/api/financial/records${params.toString() ? `?${params.toString()}` : ""}`;
-    const response = await apiRequest("GET", url);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    const response = await fetch(`/api/financial/records${query}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     return response.json();
   },
 
-  async getSummary(period?: "week" | "month" | "year", startDate?: string, endDate?: string): Promise<FinancialSummaryResponse> {
-    const params = new URLSearchParams();
-    if (period) params.append("period", period);
-    if (startDate) params.append("startDate", startDate);
-    if (endDate) params.append("endDate", endDate);
-    
-    const url = `/api/financial/summary${params.toString() ? `?${params.toString()}` : ""}`;
-    const response = await apiRequest("GET", url);
+  async getSummary(period?: string) {
+    const params = period ? `?period=${period}` : '';
+    const response = await fetch(`/api/financial/summary${params}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     return response.json();
   },
 
-  async createRecord(record: InsertFinancialRecord & { createdViaVoice?: boolean; voiceTranscription?: string; metadata?: any }): Promise<FinancialRecordResponse> {
-    const response = await apiRequest("POST", "/api/financial/records", record);
+  async createRecord(record: any) {
+    const response = await fetch('/api/financial/records', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record),
+    });
     return response.json();
   },
 
-  async updateRecord(id: number, updates: Partial<FinancialRecord>): Promise<FinancialRecordResponse> {
-    const response = await apiRequest("PUT", `/api/financial/records/${id}`, updates);
+  async updateRecord(id: number, updates: any) {
+    const response = await fetch(`/api/financial/records/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
     return response.json();
   },
 
-  async deleteRecord(id: number): Promise<{ message: string }> {
-    const response = await apiRequest("DELETE", `/api/financial/records/${id}`);
+  async deleteRecord(id: number) {
+    const response = await fetch(`/api/financial/records/${id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+    });
     return response.json();
   },
 };

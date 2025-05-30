@@ -5,9 +5,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { VoiceProvider } from "@/context/VoiceProvider";
+import { NotificationProvider } from "@/context/NotificationProvider";
 import LandingPage from "@/pages/LandingPage";
 import DashboardPage from "@/pages/DashboardPage";
 import LoginPage from "@/pages/LoginPage";
+import ProfessionalDirectory from "@/pages/ProfessionalDirectory";
 // import OnboardingPage from "@/pages/OnboardingPage";
 import NotFound from "@/pages/not-found";
 
@@ -18,6 +21,7 @@ function Router() {
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={LoginPage} />
       <Route path="/dashboard" component={DashboardPage} />
+      <Route path="/professionals" component={ProfessionalDirectory} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -28,10 +32,14 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
+          <NotificationProvider>
+            <VoiceProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Router />
+              </TooltipProvider>
+            </VoiceProvider>
+          </NotificationProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

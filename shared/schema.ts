@@ -167,26 +167,6 @@ export const userPreferencesRelations = relations(userPreferences, ({ one }) => 
   user: one(users, { fields: [userPreferences.userId], references: [users.id] }),
 }));
 
-export const availabilityRelations = relations(availability, ({ one }) => ({
-  professional: one(users, { fields: [availability.professionalId], references: [users.id] }),
-}));
-
-export const appointmentsRelations = relations(appointments, ({ one }) => ({
-  professional: one(users, { fields: [appointments.professionalId], references: [users.id] }),
-  client: one(users, { fields: [appointments.clientId], references: [users.id] }),
-}));
-
-export const connectionsRelations = relations(connections, ({ one }) => ({
-  requester: one(users, { fields: [connections.requesterId], references: [users.id] }),
-  receiver: one(users, { fields: [connections.receiverId], references: [users.id] }),
-}));
-
-export const reviewsRelations = relations(reviews, ({ one }) => ({
-  professional: one(users, { fields: [reviews.professionalId], references: [users.id] }),
-  client: one(users, { fields: [reviews.clientId], references: [users.id] }),
-  appointment: one(appointments, { fields: [reviews.appointmentId], references: [appointments.id] }),
-}));
-
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,

@@ -14,14 +14,21 @@ import { Mic, Moon, Sun, Loader2, AlertCircle, CheckCircle2 } from "lucide-react
 import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
-  const [, setLocation] = useLocation();
-  const { login, user } = useAuth();
+  const [location, setLocation] = useLocation();
+  const { login, register, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { toast } = useToast();
+  
+  const isRegisterMode = location === "/register";
   
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    confirmPassword: "",
+    username: "",
+    firstName: "",
+    lastName: "",
+    role: "standard",
     rememberMe: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,17 +46,41 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      await login(formData.email, formData.password);
-      
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in.",
-      });
-      
-      setLocation("/dashboard");
+      if (isRegisterMode) {
+        if (formData.password !== formData.confirmPassword) {
+          setError("Passwords do not match");
+          return;
+        }
+        
+        await register({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          role: formData.role,
+        });
+        
+        toast({
+          title: "Account created!",
+          description: "You have successfully registered. Please sign in.",
+        });
+        
+        setLocation("/login");
+      } else {
+        await login(formData.email, formData.password);
+        
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully signed in.",
+        });
+        
+        setLocation("/dashboard");
+      }
     } catch (error: any) {
-      console.error("Login error:", error);
-      setError(error.message || "Failed to sign in. Please check your credentials.");
+      console.error("Auth error:", error);
+      setError(error.message || `Failed to ${isRegisterMode ? 'register' : 'sign in'}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }

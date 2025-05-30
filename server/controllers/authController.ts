@@ -127,7 +127,22 @@ export const authController = {
         return res.status(401).json({ error: 'Not authenticated' });
       }
 
-      const allowedUpdates = ['firstName', 'lastName', 'voiceEnabled', 'ttsEnabled'];
+      const allowedUpdates = [
+        'firstName', 
+        'lastName', 
+        'voiceEnabled', 
+        'ttsEnabled',
+        'onboardingComplete',
+        'businessName',
+        'bio',
+        'specializations',
+        'phoneNumber',
+        'address',
+        'allowAppointmentBooking',
+        'isProfessional',
+        'isPublicProfile',
+        'professionalType'
+      ];
       const updates: any = {};
       
       for (const field of allowedUpdates) {

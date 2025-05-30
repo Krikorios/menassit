@@ -12,6 +12,12 @@ import DashboardPage from "@/pages/DashboardPage";
 import LoginPage from "@/pages/LoginPage";
 import ProfessionalDirectory from "@/pages/ProfessionalDirectory";
 import OnboardingPage from "@/pages/OnboardingPage";
+import TasksPage from "@/pages/TasksPage";
+import FinancesPage from "@/pages/FinancesPage";
+import VoicePage from "@/pages/VoicePage";
+import AIPage from "@/pages/AIPage";
+import AnalyticsPage from "@/pages/AnalyticsPage";
+import SettingsPage from "@/pages/SettingsPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +28,12 @@ function Router() {
       <Route path="/register" component={LoginPage} />
       <Route path="/onboarding" component={OnboardingPage} />
       <Route path="/dashboard" component={DashboardPage} />
+      <Route path="/tasks" component={TasksPage} />
+      <Route path="/finances" component={FinancesPage} />
+      <Route path="/voice" component={VoicePage} />
+      <Route path="/ai" component={AIPage} />
+      <Route path="/analytics" component={AnalyticsPage} />
+      <Route path="/settings" component={SettingsPage} />
       <Route path="/professionals" component={ProfessionalDirectory} />
       <Route component={NotFound} />
     </Switch>

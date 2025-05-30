@@ -104,10 +104,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTasks(userId: number, status?: string): Promise<Task[]> {
-    const query = db.select().from(tasks).where(eq(tasks.userId, userId));
+    let query = db.select().from(tasks).where(eq(tasks.userId, userId));
     
     if (status) {
-      query.where(and(eq(tasks.userId, userId), eq(tasks.status, status)));
+      query = db.select().from(tasks).where(and(eq(tasks.userId, userId), eq(tasks.status, status)));
     }
     
     return await query.orderBy(desc(tasks.createdAt));
@@ -134,7 +134,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(tasks)
       .where(and(eq(tasks.id, id), eq(tasks.userId, userId)));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   async createFinancialRecord(record: InsertFinancialRecord): Promise<FinancialRecord> {
@@ -146,36 +146,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFinancialRecords(userId: number, startDate?: Date, endDate?: Date): Promise<FinancialRecord[]> {
-    let query = db.select().from(financialRecords).where(eq(financialRecords.userId, userId));
+    let whereConditions = [eq(financialRecords.userId, userId)];
     
     if (startDate && endDate) {
-      query = query.where(
-        and(
-          eq(financialRecords.userId, userId),
-          gte(financialRecords.date, startDate),
-          lte(financialRecords.date, endDate)
-        )
-      );
+      whereConditions.push(gte(financialRecords.date, startDate));
+      whereConditions.push(lte(financialRecords.date, endDate));
     }
+    
+    const query = db.select().from(financialRecords).where(and(...whereConditions));
     
     return await query.orderBy(desc(financialRecords.date));
   }
 
   async getFinancialSummary(userId: number, startDate?: Date, endDate?: Date): Promise<{ income: number; expenses: number; net: number }> {
-    let query = db.select({
-      type: financialRecords.type,
-      amount: financialRecords.amount
-    }).from(financialRecords).where(eq(financialRecords.userId, userId));
+    let whereConditions = [eq(financialRecords.userId, userId)];
     
     if (startDate && endDate) {
-      query = query.where(
-        and(
-          eq(financialRecords.userId, userId),
-          gte(financialRecords.date, startDate),
-          lte(financialRecords.date, endDate)
-        )
-      );
+      whereConditions.push(gte(financialRecords.date, startDate));
+      whereConditions.push(lte(financialRecords.date, endDate));
     }
+    
+    const query = db.select({
+      type: financialRecords.type,
+      amount: financialRecords.amount
+    }).from(financialRecords).where(and(...whereConditions));
     
     const records = await query;
     
@@ -211,7 +205,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(financialRecords)
       .where(and(eq(financialRecords.id, id), eq(financialRecords.userId, userId)));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   async createVoiceCommand(command: InsertVoiceCommand): Promise<VoiceCommand> {

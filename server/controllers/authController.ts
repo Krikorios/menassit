@@ -22,7 +22,7 @@ export const authController = {
 
       // Hash password
       const saltRounds = 12;
-      const hashedPassword = await bcrypt.hash(validatedData.password, saltRounds);
+      const hashedPassword = await bcrypt.hash(validatedData.password as string, saltRounds);
 
       // Determine role - special handling for admin user
       let userRole = "standard";

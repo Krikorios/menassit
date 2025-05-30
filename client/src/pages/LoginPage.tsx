@@ -119,9 +119,14 @@ export default function LoginPage() {
       {/* Main Login Card */}
       <Card className="w-full max-w-md shadow-2xl border-slate-200 dark:border-slate-700">
         <CardHeader className="text-center space-y-2">
-          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+          <CardTitle className="text-2xl font-bold">
+            {isRegisterMode ? "Create Account" : "Welcome Back"}
+          </CardTitle>
           <CardDescription>
-            Sign in to your TaskFin account to access your voice-powered productivity tools
+            {isRegisterMode 
+              ? "Join TaskFin to manage your tasks and finances with AI" 
+              : "Sign in to your TaskFin account to access your voice-powered productivity tools"
+            }
           </CardDescription>
           
           {/* Features Badge */}
@@ -145,6 +150,62 @@ export default function LoginPage() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
+            )}
+
+            {/* Registration Fields */}
+            {isRegisterMode && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      placeholder="John"
+                      value={formData.firstName}
+                      onChange={(e) => handleInputChange("firstName", e.target.value)}
+                      disabled={isSubmitting}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      placeholder="Doe"
+                      value={formData.lastName}
+                      onChange={(e) => handleInputChange("lastName", e.target.value)}
+                      disabled={isSubmitting}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    placeholder="johndoe"
+                    value={formData.username}
+                    onChange={(e) => handleInputChange("username", e.target.value)}
+                    disabled={isSubmitting}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="role">Account Type</Label>
+                  <select
+                    id="role"
+                    value={formData.role}
+                    onChange={(e) => handleInputChange("role", e.target.value)}
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="standard">Standard - Basic task and financial management</option>
+                    <option value="pro">Pro - Includes professional profiles and appointment booking</option>
+                  </select>
+                </div>
+              </>
             )}
 
             {/* Email Field */}
@@ -176,6 +237,23 @@ export default function LoginPage() {
                 className="focus-ring"
               />
             </div>
+
+            {/* Confirm Password Field - Registration Only */}
+            {isRegisterMode && (
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Confirm your password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                  disabled={isSubmitting}
+                  required
+                  className="focus-ring"
+                />
+              </div>
+            )}
 
             {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between">
@@ -210,17 +288,30 @@ export default function LoginPage() {
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={isSubmitting || !formData.email || !formData.password}
+              disabled={isSubmitting || !formData.email || !formData.password || (isRegisterMode && !formData.username)}
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Signing In...
+                  {isRegisterMode ? "Creating Account..." : "Signing In..."}
                 </>
               ) : (
-                "Sign In"
+                isRegisterMode ? "Create Account" : "Sign In"
               )}
             </Button>
+
+            {/* Switch between Login/Register */}
+            <div className="text-center">
+              <span className="text-sm text-muted-foreground">
+                {isRegisterMode ? "Already have an account? " : "Don't have an account? "}
+              </span>
+              <Link 
+                href={isRegisterMode ? "/login" : "/register"}
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                {isRegisterMode ? "Sign in" : "Create one"}
+              </Link>
+            </div>
 
             {/* Divider */}
             <div className="relative">

@@ -25,7 +25,7 @@ import {
 
 export default function LandingPage() {
   const [, setLocation] = useLocation();
-  const { user } = useAuth();
+  const { user } = useAuth() || {};
   const { isListening, startListening, stopListening, isSupported } = useVoice();
   const { theme } = useTheme();
 

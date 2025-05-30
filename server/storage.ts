@@ -166,12 +166,10 @@ export class DatabaseStorage implements IStorage {
       whereConditions.push(lte(financialRecords.date, endDate));
     }
     
-    const query = db.select({
+    const records = await db.select({
       type: financialRecords.type,
       amount: financialRecords.amount
     }).from(financialRecords).where(and(...whereConditions));
-    
-    const records = await query;
     
     let income = 0;
     let expenses = 0;
@@ -234,17 +232,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAIInteractions(userId?: number, type?: string, limit: number = 50): Promise<AIInteraction[]> {
-    let query = db.select().from(aiInteractions);
-    
     const conditions = [];
     if (userId) conditions.push(eq(aiInteractions.userId, userId));
     if (type) conditions.push(eq(aiInteractions.type, type));
     
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
+    const baseQuery = db.select().from(aiInteractions);
     
-    return await query
+    const finalQuery = conditions.length > 0 
+      ? baseQuery.where(and(...conditions))
+      : baseQuery;
+    
+    return await finalQuery
       .orderBy(desc(aiInteractions.createdAt))
       .limit(limit);
   }

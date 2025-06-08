@@ -20,7 +20,8 @@ import {
   Monitor,
   UserCheck,
   Focus,
-  Palette
+  Palette,
+  MessageCircle
 } from "lucide-react";
 
 interface SidebarProps {
@@ -43,6 +44,12 @@ const getNavigation = (t: any) => [
     name: t('navigation.finances'),
     href: "/finances", 
     icon: DollarSign,
+  },
+  {
+    name: t('navigation.chat'),
+    href: "/chat",
+    icon: MessageCircle,
+    badge: "2", // This would come from unread message count
   },
   {
     name: t('navigation.professionals'),

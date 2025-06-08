@@ -1,6 +1,6 @@
-import { users, sessions, tasks, financialRecords, voiceCommands, aiInteractions, userPreferences, type User, type InsertUser, type Task, type InsertTask, type FinancialRecord, type InsertFinancialRecord, type Session, type VoiceCommand, type InsertVoiceCommand, type AIInteraction, type UserPreferences, type InsertUserPreferences } from "@shared/schema";
+import { users, sessions, tasks, financialRecords, voiceCommands, aiInteractions, userPreferences, contacts, chats, chatParticipants, messages, messageStatuses, professionalServices, serviceRequests, type User, type InsertUser, type Task, type InsertTask, type FinancialRecord, type InsertFinancialRecord, type Session, type VoiceCommand, type InsertVoiceCommand, type AIInteraction, type UserPreferences, type InsertUserPreferences, type Contact, type InsertContact, type Chat, type InsertChat, type ChatParticipant, type InsertChatParticipant, type Message, type InsertMessage, type MessageStatus, type InsertMessageStatus, type ProfessionalService, type InsertProfessionalService, type ServiceRequest, type InsertServiceRequest } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, gte, lte, count } from "drizzle-orm";
+import { eq, desc, and, gte, lte, count, or, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // User management
@@ -40,6 +40,36 @@ export interface IStorage {
   // User preferences
   getUserPreferences(userId: number): Promise<UserPreferences | undefined>;
   updateUserPreferences(userId: number, preferences: Partial<InsertUserPreferences>): Promise<UserPreferences>;
+  
+  // Chat management
+  createContact(contact: InsertContact): Promise<Contact>;
+  getContacts(userId: number): Promise<Contact[]>;
+  updateContact(id: number, userId: number, updates: Partial<Contact>): Promise<Contact | undefined>;
+  deleteContact(id: number, userId: number): Promise<boolean>;
+  
+  // Chat operations
+  createChat(chat: InsertChat): Promise<Chat>;
+  getChats(userId: number): Promise<Chat[]>;
+  getChat(id: number, userId: number): Promise<Chat | undefined>;
+  addChatParticipant(participant: InsertChatParticipant): Promise<ChatParticipant>;
+  removeChatParticipant(chatId: number, userId: number): Promise<boolean>;
+  
+  // Message operations
+  createMessage(message: InsertMessage): Promise<Message>;
+  getMessages(chatId: number, userId: number, limit?: number): Promise<Message[]>;
+  updateMessage(id: number, userId: number, updates: Partial<Message>): Promise<Message | undefined>;
+  deleteMessage(id: number, userId: number): Promise<boolean>;
+  markMessageAsRead(messageId: number, userId: number): Promise<void>;
+  
+  // Professional services
+  createProfessionalService(service: InsertProfessionalService): Promise<ProfessionalService>;
+  getProfessionalServices(type?: string, location?: string): Promise<ProfessionalService[]>;
+  updateProfessionalService(id: number, userId: number, updates: Partial<ProfessionalService>): Promise<ProfessionalService | undefined>;
+  
+  // Service requests
+  createServiceRequest(request: InsertServiceRequest): Promise<ServiceRequest>;
+  getServiceRequests(userId: number, type?: 'client' | 'provider'): Promise<ServiceRequest[]>;
+  updateServiceRequest(id: number, userId: number, updates: Partial<ServiceRequest>): Promise<ServiceRequest | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -272,6 +302,241 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return created;
     }
+  }
+
+  // Chat management implementation
+  async createContact(contact: InsertContact): Promise<Contact> {
+    const [created] = await db
+      .insert(contacts)
+      .values(contact)
+      .returning();
+    return created;
+  }
+
+  async getContacts(userId: number): Promise<Contact[]> {
+    return await db
+      .select()
+      .from(contacts)
+      .where(eq(contacts.userId, userId))
+      .orderBy(desc(contacts.lastContactedAt));
+  }
+
+  async updateContact(id: number, userId: number, updates: Partial<Contact>): Promise<Contact | undefined> {
+    const [updated] = await db
+      .update(contacts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(and(eq(contacts.id, id), eq(contacts.userId, userId)))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteContact(id: number, userId: number): Promise<boolean> {
+    const result = await db
+      .delete(contacts)
+      .where(and(eq(contacts.id, id), eq(contacts.userId, userId)));
+    return result.rowCount > 0;
+  }
+
+  // Chat operations implementation
+  async createChat(chat: InsertChat): Promise<Chat> {
+    const [created] = await db
+      .insert(chats)
+      .values(chat)
+      .returning();
+    return created;
+  }
+
+  async getChats(userId: number): Promise<Chat[]> {
+    return await db
+      .select({
+        id: chats.id,
+        type: chats.type,
+        name: chats.name,
+        description: chats.description,
+        avatar: chats.avatar,
+        isActive: chats.isActive,
+        lastMessageId: chats.lastMessageId,
+        lastMessageAt: chats.lastMessageAt,
+        createdBy: chats.createdBy,
+        createdAt: chats.createdAt,
+        updatedAt: chats.updatedAt,
+      })
+      .from(chats)
+      .innerJoin(chatParticipants, eq(chats.id, chatParticipants.chatId))
+      .where(and(
+        eq(chatParticipants.userId, userId),
+        eq(chatParticipants.isActive, true)
+      ))
+      .orderBy(desc(chats.lastMessageAt));
+  }
+
+  async getChat(id: number, userId: number): Promise<Chat | undefined> {
+    const [chat] = await db
+      .select()
+      .from(chats)
+      .innerJoin(chatParticipants, eq(chats.id, chatParticipants.chatId))
+      .where(and(
+        eq(chats.id, id),
+        eq(chatParticipants.userId, userId),
+        eq(chatParticipants.isActive, true)
+      ));
+    return chat?.chats || undefined;
+  }
+
+  async addChatParticipant(participant: InsertChatParticipant): Promise<ChatParticipant> {
+    const [created] = await db
+      .insert(chatParticipants)
+      .values(participant)
+      .returning();
+    return created;
+  }
+
+  async removeChatParticipant(chatId: number, userId: number): Promise<boolean> {
+    const result = await db
+      .update(chatParticipants)
+      .set({ isActive: false, leftAt: new Date() })
+      .where(and(eq(chatParticipants.chatId, chatId), eq(chatParticipants.userId, userId)));
+    return result.rowCount > 0;
+  }
+
+  // Message operations implementation
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const [created] = await db
+      .insert(messages)
+      .values(message)
+      .returning();
+    
+    // Update chat's last message
+    await db
+      .update(chats)
+      .set({ lastMessageId: created.id, lastMessageAt: created.createdAt })
+      .where(eq(chats.id, created.chatId));
+    
+    return created;
+  }
+
+  async getMessages(chatId: number, userId: number, limit: number = 50): Promise<Message[]> {
+    // Verify user is participant in chat
+    const [participant] = await db
+      .select()
+      .from(chatParticipants)
+      .where(and(
+        eq(chatParticipants.chatId, chatId),
+        eq(chatParticipants.userId, userId),
+        eq(chatParticipants.isActive, true)
+      ));
+    
+    if (!participant) {
+      return [];
+    }
+
+    return await db
+      .select()
+      .from(messages)
+      .where(and(
+        eq(messages.chatId, chatId),
+        eq(messages.isDeleted, false)
+      ))
+      .orderBy(desc(messages.createdAt))
+      .limit(limit);
+  }
+
+  async updateMessage(id: number, userId: number, updates: Partial<Message>): Promise<Message | undefined> {
+    const [updated] = await db
+      .update(messages)
+      .set({ ...updates, isEdited: true, editedAt: new Date() })
+      .where(and(eq(messages.id, id), eq(messages.senderId, userId)))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteMessage(id: number, userId: number): Promise<boolean> {
+    const result = await db
+      .update(messages)
+      .set({ isDeleted: true, deletedAt: new Date() })
+      .where(and(eq(messages.id, id), eq(messages.senderId, userId)));
+    return result.rowCount > 0;
+  }
+
+  async markMessageAsRead(messageId: number, userId: number): Promise<void> {
+    await db
+      .insert(messageStatuses)
+      .values({
+        messageId,
+        userId,
+        status: 'read',
+        timestamp: new Date()
+      });
+  }
+
+  // Professional services implementation
+  async createProfessionalService(service: InsertProfessionalService): Promise<ProfessionalService> {
+    const [created] = await db
+      .insert(professionalServices)
+      .values(service)
+      .returning();
+    return created;
+  }
+
+  async getProfessionalServices(type?: string, location?: string): Promise<ProfessionalService[]> {
+    let query = db
+      .select()
+      .from(professionalServices)
+      .where(eq(professionalServices.isActive, true));
+
+    if (type) {
+      query = query.where(eq(professionalServices.type, type));
+    }
+    
+    if (location) {
+      query = query.where(eq(professionalServices.location, location));
+    }
+
+    return await query.orderBy(desc(professionalServices.rating));
+  }
+
+  async updateProfessionalService(id: number, userId: number, updates: Partial<ProfessionalService>): Promise<ProfessionalService | undefined> {
+    const [updated] = await db
+      .update(professionalServices)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(and(eq(professionalServices.id, id), eq(professionalServices.providerId, userId)))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Service requests implementation
+  async createServiceRequest(request: InsertServiceRequest): Promise<ServiceRequest> {
+    const [created] = await db
+      .insert(serviceRequests)
+      .values(request)
+      .returning();
+    return created;
+  }
+
+  async getServiceRequests(userId: number, type: 'client' | 'provider' = 'client'): Promise<ServiceRequest[]> {
+    if (type === 'client') {
+      return await db
+        .select()
+        .from(serviceRequests)
+        .where(eq(serviceRequests.clientId, userId))
+        .orderBy(desc(serviceRequests.createdAt));
+    } else {
+      return await db
+        .select()
+        .from(serviceRequests)
+        .innerJoin(professionalServices, eq(serviceRequests.serviceId, professionalServices.id))
+        .where(eq(professionalServices.providerId, userId))
+        .orderBy(desc(serviceRequests.createdAt));
+    }
+  }
+
+  async updateServiceRequest(id: number, userId: number, updates: Partial<ServiceRequest>): Promise<ServiceRequest | undefined> {
+    const [updated] = await db
+      .update(serviceRequests)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(and(eq(serviceRequests.id, id), eq(serviceRequests.clientId, userId)))
+      .returning();
+    return updated || undefined;
   }
 }
 

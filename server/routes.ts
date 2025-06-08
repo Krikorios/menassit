@@ -1,11 +1,12 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcryptjs";
 import { storage } from "./storage";
-import { authMiddleware, requireRole } from "./middleware/auth";
+import { authMiddleware, requireRole, type AuthenticatedRequest } from "./middleware/auth";
 import { 
   generalRateLimit, 
   authRateLimit, 
@@ -18,6 +19,20 @@ import {
 } from "./middleware/security";
 import { monitoringService } from "./services/monitoringService";
 import { taskScheduler } from "./services/taskScheduler";
+
+// WebSocket connection management
+const wsConnections = new Map<number, WebSocket[]>(); // userId -> WebSocket connections
+
+function broadcastToChat(chatId: number, data: any) {
+  // Get all participants of the chat and send message to their connections
+  wsConnections.forEach((connections, userId) => {
+    connections.forEach(ws => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(data));
+      }
+    });
+  });
+}
 import { performanceOptimizationService } from "./services/performanceOptimization";
 import { authController } from "./controllers/authController";
 import { taskController } from "./controllers/taskController";
@@ -156,6 +171,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ status: 'Memory optimization completed' });
     } catch (error) {
       res.status(500).json({ error: 'Failed to optimize memory' });
+    }
+  });
+
+  // Chat API routes
+  app.get('/api/chats', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const chats = await storage.getChats(req.user.id);
+      res.json(chats);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch chats' });
+    }
+  });
+
+  app.post('/api/chats', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const chat = await storage.createChat({
+        ...req.body,
+        createdBy: req.user.id
+      });
+      
+      // Add creator as participant
+      await storage.addChatParticipant({
+        chatId: chat.id,
+        userId: req.user.id,
+        role: 'admin'
+      });
+      
+      res.json(chat);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create chat' });
+    }
+  });
+
+  app.get('/api/chats/:id/messages', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const chatId = parseInt(req.params.id);
+      const limit = parseInt(req.query.limit as string) || 50;
+      const messages = await storage.getMessages(chatId, req.user.id, limit);
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch messages' });
+    }
+  });
+
+  app.post('/api/chats/:id/messages', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const chatId = parseInt(req.params.id);
+      const message = await storage.createMessage({
+        chatId,
+        senderId: req.user.id,
+        ...req.body
+      });
+      
+      // Broadcast to WebSocket clients
+      broadcastToChat(chatId, {
+        type: 'new_message',
+        chatId,
+        message
+      });
+      
+      res.json(message);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to send message' });
+    }
+  });
+
+  app.get('/api/contacts', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const contacts = await storage.getContacts(req.user.id);
+      res.json(contacts);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch contacts' });
+    }
+  });
+
+  app.post('/api/contacts', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const contact = await storage.createContact({
+        ...req.body,
+        userId: req.user.id
+      });
+      res.json(contact);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create contact' });
+    }
+  });
+
+  app.get('/api/professional-services', async (req: Request, res: Response) => {
+    try {
+      const { type, location } = req.query;
+      const services = await storage.getProfessionalServices(
+        type as string,
+        location as string
+      );
+      res.json(services);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch professional services' });
+    }
+  });
+
+  app.post('/api/professional-services', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const service = await storage.createProfessionalService({
+        ...req.body,
+        providerId: req.user.id
+      });
+      res.json(service);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create professional service' });
+    }
+  });
+
+  app.get('/api/service-requests', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const type = req.query.type as 'client' | 'provider' || 'client';
+      const requests = await storage.getServiceRequests(req.user.id, type);
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch service requests' });
+    }
+  });
+
+  app.post('/api/service-requests', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const request = await storage.createServiceRequest({
+        ...req.body,
+        clientId: req.user.id
+      });
+      res.json(request);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create service request' });
     }
   });
 

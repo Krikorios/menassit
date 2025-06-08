@@ -21,8 +21,10 @@ import {
   Brain, 
   Activity, 
   TrendingUp,
-  Zap 
+  Zap,
+  HelpCircle
 } from "lucide-react";
+import { useTourManager, getMainTourSteps } from "@/components/onboarding/TourManager";
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();

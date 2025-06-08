@@ -222,5 +222,89 @@
     "deleted": "Successfully deleted",
     "updated": "Successfully updated",
     "created": "Successfully created"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Welcome to TaskFin!",
+      "content": "Let's take a quick tour to help you get started with all the powerful features available."
+    },
+    "navigation": {
+      "title": "Navigation Menu",
+      "content": "Use this sidebar to navigate between different sections of the application. Each section offers specialized tools for productivity and organization."
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "content": "Your central hub showing key metrics, recent activities, and quick access to important features."
+    },
+    "tasks": {
+      "title": "Task Management",
+      "content": "Create, organize, and track your tasks with powerful filtering and categorization options."
+    },
+    "createTask": {
+      "title": "Create New Task",
+      "content": "Click here to add new tasks. You can set priorities, due dates, and organize them into projects."
+    },
+    "finances": {
+      "title": "Financial Management",
+      "content": "Track your income, expenses, and budgets with comprehensive financial planning tools."
+    },
+    "voice": {
+      "title": "Voice Control",
+      "content": "Use voice commands to quickly create tasks, add expenses, or navigate the application hands-free."
+    },
+    "ai": {
+      "title": "AI Assistant",
+      "content": "Get intelligent insights, automated suggestions, and helpful assistance with your daily tasks."
+    },
+    "profile": {
+      "title": "Profile Menu",
+      "content": "Access your account settings, preferences, and user profile information."
+    },
+    "settings": {
+      "title": "Settings",
+      "content": "Customize your experience with themes, language preferences, and application settings."
+    },
+    "taskList": {
+      "title": "Your Tasks",
+      "content": "View and manage all your tasks in this organized list. Click on any task to edit or mark as complete."
+    },
+    "taskFilters": {
+      "title": "Filter Options",
+      "content": "Use these filters to quickly find specific tasks by status, priority, or category."
+    },
+    "taskCreate": {
+      "title": "Task Creation Form",
+      "content": "Fill out this form to create detailed tasks with descriptions, priorities, and due dates."
+    },
+    "financialOverview": {
+      "title": "Financial Overview",
+      "content": "Get a snapshot of your financial health with income, expenses, and budget summaries."
+    },
+    "addRecord": {
+      "title": "Add Financial Record",
+      "content": "Click here to quickly add income or expense records to track your finances."
+    },
+    "budgetPlanner": {
+      "title": "Budget Planning",
+      "content": "Set up budgets and track your spending against your financial goals."
+    },
+    "voiceRecorder": {
+      "title": "Voice Recording",
+      "content": "Press and hold to record voice commands or notes that will be processed automatically."
+    },
+    "voiceCommands": {
+      "title": "Available Commands",
+      "content": "View all available voice commands and their functions for quick reference."
+    },
+    "voiceShortcuts": {
+      "title": "Voice Shortcuts",
+      "content": "Quick access buttons for common voice commands and actions."
+    },
+    "previous": "Previous",
+    "next": "Next",
+    "finish": "Finish Tour",
+    "optional": "Optional",
+    "clickInstruction": "Try clicking on this element to see how it works.",
+    "hoverInstruction": "Hover over this element to explore its functionality."
   }
 }

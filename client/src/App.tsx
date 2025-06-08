@@ -8,6 +8,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { VoiceProvider } from "@/context/VoiceProvider";
 import { NotificationProvider } from "@/context/NotificationProvider";
+import { TourManagerProvider } from "@/components/onboarding/TourManager";
 import LandingPage from "@/pages/LandingPage";
 import DashboardPage from "@/pages/DashboardPage";
 import LoginPage from "@/pages/LoginPage";
@@ -50,11 +51,13 @@ function App() {
         <AuthProvider>
           <NotificationProvider>
             <VoiceProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Router />
-                <FloatingVoiceControl />
-              </TooltipProvider>
+              <TourManagerProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Router />
+                  <FloatingVoiceControl />
+                </TooltipProvider>
+              </TourManagerProvider>
             </VoiceProvider>
           </NotificationProvider>
         </AuthProvider>

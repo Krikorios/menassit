@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/ui/page-header';
 import { useToast } from '@/hooks/use-toast';
-import VoiceShortcuts from '@/components/voice/VoiceShortcuts';
+import { VoiceShortcuts } from '@/components/voice/VoiceShortcuts';
 import Sidebar from '@/components/layout/Sidebar';
 import { 
   Plus, 

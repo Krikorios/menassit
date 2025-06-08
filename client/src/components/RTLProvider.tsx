@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { arabicFontOptimizer } from '@/lib/fontOptimization';
+import { arabicPerformanceTracker } from '@/lib/arabicPerformanceTracker';
 
 interface RTLContextType {
   isRTL: boolean;

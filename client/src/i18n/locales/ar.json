@@ -319,7 +319,10 @@
     "browserNative": "متصفح أصلي",
     "azureSpeech": "Azure Speech",
     "active": "نشط",
-    "requestsThisMonth": "طلب هذا الشهر"
+    "requestsThisMonth": "طلب هذا الشهر",
+    "claude3Active": "Claude 3 Sonnet - نشط",
+    "apiUsageValue": "2,341 طلب هذا الشهر",
+    "saveAiSettings": "حفظ إعدادات الذكاء الاصطناعي"
   },
   "auth": {
     "login": "تسجيل الدخول",

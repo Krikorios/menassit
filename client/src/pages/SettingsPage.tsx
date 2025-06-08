@@ -344,18 +344,18 @@ export default function SettingsPage() {
                   <div className="pt-4 border-t">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <p className="font-medium">Current Model Status</p>
-                        <p className="text-green-600 dark:text-green-400">Claude 3 Sonnet - Active</p>
+                        <p className="font-medium">{t('settings.currentModelStatus')}</p>
+                        <p className="text-green-600 dark:text-green-400">{t('settings.claude3Active')}</p>
                       </div>
                       <div>
-                        <p className="font-medium">API Usage</p>
-                        <p className="text-gray-600 dark:text-gray-400">2,341 requests this month</p>
+                        <p className="font-medium">{t('settings.apiUsage')}</p>
+                        <p className="text-gray-600 dark:text-gray-400">{t('settings.apiUsageValue')}</p>
                       </div>
                     </div>
                   </div>
 
                   <Button className="w-full">
-                    Save AI Model Settings
+                    {t('settings.saveAiSettings')}
                   </Button>
                 </CardContent>
               </Card>

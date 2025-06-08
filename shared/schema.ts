@@ -20,6 +20,30 @@ export const connectionStatusEnum = pgEnum("connection_status", [
   "pending", "accepted", "blocked"
 ]);
 
+export const messageTypeEnum = pgEnum("message_type", [
+  "text",
+  "image",
+  "document",
+  "voice",
+  "video",
+  "location",
+  "contact"
+]);
+
+export const chatTypeEnum = pgEnum("chat_type", [
+  "direct",
+  "group",
+  "professional_service",
+  "support"
+]);
+
+export const messageStatusEnum = pgEnum("message_status", [
+  "sent",
+  "delivered",
+  "read",
+  "failed"
+]);
+
 // Users table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -250,6 +274,133 @@ export const userPreferences = pgTable("user_preferences", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Contacts table for chat integration
+export const contacts = pgTable("contacts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  contactUserId: integer("contact_user_id").references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  phoneNumber: text("phone_number"),
+  email: text("email"),
+  avatar: text("avatar"),
+  isProfessional: boolean("is_professional").default(false),
+  professionalType: professionalTypeEnum("professional_type"),
+  company: text("company"),
+  specialization: text("specialization"),
+  location: text("location"),
+  isBlocked: boolean("is_blocked").default(false),
+  isFavorite: boolean("is_favorite").default(false),
+  lastContactedAt: timestamp("last_contacted_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Chats table
+export const chats = pgTable("chats", {
+  id: serial("id").primaryKey(),
+  type: chatTypeEnum("type").notNull().default("direct"),
+  name: text("name"), // for group chats
+  description: text("description"),
+  avatar: text("avatar"),
+  isActive: boolean("is_active").default(true),
+  lastMessageId: integer("last_message_id"),
+  lastMessageAt: timestamp("last_message_at"),
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Chat participants table
+export const chatParticipants = pgTable("chat_participants", {
+  id: serial("id").primaryKey(),
+  chatId: integer("chat_id").notNull().references(() => chats.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  role: varchar("role", { length: 20 }).default("member"), // admin, member
+  joinedAt: timestamp("joined_at").defaultNow(),
+  leftAt: timestamp("left_at"),
+  isActive: boolean("is_active").default(true),
+  lastReadMessageId: integer("last_read_message_id"),
+  isMuted: boolean("is_muted").default(false),
+});
+
+// Messages table
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  chatId: integer("chat_id").notNull().references(() => chats.id, { onDelete: "cascade" }),
+  senderId: integer("sender_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: messageTypeEnum("type").notNull().default("text"),
+  content: text("content"),
+  mediaUrl: text("media_url"),
+  mediaType: varchar("media_type", { length: 50 }),
+  mediaSize: integer("media_size"),
+  replyToMessageId: integer("reply_to_message_id").references(() => messages.id),
+  isEdited: boolean("is_edited").default(false),
+  editedAt: timestamp("edited_at"),
+  isDeleted: boolean("is_deleted").default(false),
+  deletedAt: timestamp("deleted_at"),
+  metadata: json("metadata").$type<{
+    location?: { latitude: number; longitude: number; address?: string };
+    contact?: { name: string; phone: string; email?: string };
+    duration?: number; // for voice/video messages
+    reactions?: { [userId: string]: string };
+  }>(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Message status table (for delivery/read receipts)
+export const messageStatuses = pgTable("message_statuses", {
+  id: serial("id").primaryKey(),
+  messageId: integer("message_id").notNull().references(() => messages.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  status: messageStatusEnum("status").notNull(),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+// Professional services table
+export const professionalServices = pgTable("professional_services", {
+  id: serial("id").primaryKey(),
+  providerId: integer("provider_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  type: professionalTypeEnum("type").notNull(),
+  specializations: text("specializations").array(),
+  hourlyRate: numeric("hourly_rate", { precision: 10, scale: 2 }),
+  currency: varchar("currency", { length: 3 }).default("OMR"),
+  availability: json("availability").$type<{
+    [key: string]: { start: string; end: string; available: boolean }[]
+  }>(),
+  location: text("location"),
+  isOnline: boolean("is_online").default(false),
+  rating: numeric("rating", { precision: 3, scale: 2 }),
+  reviewCount: integer("review_count").default(0),
+  isVerified: boolean("is_verified").default(false),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Service requests table
+export const serviceRequests = pgTable("service_requests", {
+  id: serial("id").primaryKey(),
+  clientId: integer("client_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  serviceId: integer("service_id").notNull().references(() => professionalServices.id, { onDelete: "cascade" }),
+  chatId: integer("chat_id").references(() => chats.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  urgency: varchar("urgency", { length: 20 }).default("medium"), // low, medium, high
+  budget: numeric("budget", { precision: 10, scale: 2 }),
+  preferredDate: timestamp("preferred_date"),
+  status: varchar("status", { length: 20 }).default("pending"), // pending, accepted, in_progress, completed, cancelled
+  estimatedDuration: integer("estimated_duration"), // in hours
+  actualDuration: integer("actual_duration"),
+  totalCost: numeric("total_cost", { precision: 10, scale: 2 }),
+  paymentStatus: varchar("payment_status", { length: 20 }).default("pending"),
+  rating: integer("rating"), // 1-5 stars
+  review: text("review"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   sessions: many(sessions),
@@ -258,6 +409,11 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   aiInteractions: many(aiInteractions),
   voiceCommands: many(voiceCommands),
   preferences: one(userPreferences),
+  contacts: many(contacts),
+  chatParticipants: many(chatParticipants),
+  sentMessages: many(messages),
+  professionalServices: many(professionalServices),
+  serviceRequests: many(serviceRequests),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -282,6 +438,45 @@ export const voiceCommandsRelations = relations(voiceCommands, ({ one }) => ({
 
 export const userPreferencesRelations = relations(userPreferences, ({ one }) => ({
   user: one(users, { fields: [userPreferences.userId], references: [users.id] }),
+}));
+
+export const contactsRelations = relations(contacts, ({ one }) => ({
+  user: one(users, { fields: [contacts.userId], references: [users.id] }),
+  contactUser: one(users, { fields: [contacts.contactUserId], references: [users.id] }),
+}));
+
+export const chatsRelations = relations(chats, ({ one, many }) => ({
+  creator: one(users, { fields: [chats.createdBy], references: [users.id] }),
+  participants: many(chatParticipants),
+  messages: many(messages),
+}));
+
+export const chatParticipantsRelations = relations(chatParticipants, ({ one }) => ({
+  chat: one(chats, { fields: [chatParticipants.chatId], references: [chats.id] }),
+  user: one(users, { fields: [chatParticipants.userId], references: [users.id] }),
+}));
+
+export const messagesRelations = relations(messages, ({ one, many }) => ({
+  chat: one(chats, { fields: [messages.chatId], references: [chats.id] }),
+  sender: one(users, { fields: [messages.senderId], references: [users.id] }),
+  replyTo: one(messages, { fields: [messages.replyToMessageId], references: [messages.id] }),
+  statuses: many(messageStatuses),
+}));
+
+export const messageStatusesRelations = relations(messageStatuses, ({ one }) => ({
+  message: one(messages, { fields: [messageStatuses.messageId], references: [messages.id] }),
+  user: one(users, { fields: [messageStatuses.userId], references: [users.id] }),
+}));
+
+export const professionalServicesRelations = relations(professionalServices, ({ one, many }) => ({
+  provider: one(users, { fields: [professionalServices.providerId], references: [users.id] }),
+  serviceRequests: many(serviceRequests),
+}));
+
+export const serviceRequestsRelations = relations(serviceRequests, ({ one }) => ({
+  client: one(users, { fields: [serviceRequests.clientId], references: [users.id] }),
+  service: one(professionalServices, { fields: [serviceRequests.serviceId], references: [professionalServices.id] }),
+  chat: one(chats, { fields: [serviceRequests.chatId], references: [chats.id] }),
 }));
 
 // Zod schemas for validation
@@ -337,6 +532,22 @@ export type InsertVoiceCommand = z.infer<typeof insertVoiceCommandSchema>;
 export type UserPreferences = typeof userPreferences.$inferSelect;
 export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
 export type AIInteraction = typeof aiInteractions.$inferSelect;
+
+// Chat-related types
+export type Contact = typeof contacts.$inferSelect;
+export type InsertContact = typeof contacts.$inferInsert;
+export type Chat = typeof chats.$inferSelect;
+export type InsertChat = typeof chats.$inferInsert;
+export type ChatParticipant = typeof chatParticipants.$inferSelect;
+export type InsertChatParticipant = typeof chatParticipants.$inferInsert;
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = typeof messages.$inferInsert;
+export type MessageStatus = typeof messageStatuses.$inferSelect;
+export type InsertMessageStatus = typeof messageStatuses.$inferInsert;
+export type ProfessionalService = typeof professionalServices.$inferSelect;
+export type InsertProfessionalService = typeof professionalServices.$inferInsert;
+export type ServiceRequest = typeof serviceRequests.$inferSelect;
+export type InsertServiceRequest = typeof serviceRequests.$inferInsert;
 
 // Additional validation schemas
 export const loginSchema = z.object({

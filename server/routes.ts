@@ -1,12 +1,22 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import express from "express";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcryptjs";
 import { storage } from "./storage";
 import { authMiddleware, requireRole } from "./middleware/auth";
+import { 
+  generalRateLimit, 
+  authRateLimit, 
+  voiceRateLimit, 
+  aiRateLimit,
+  securityMiddleware,
+  compressionMiddleware,
+  requestLoggingMiddleware,
+  errorTrackingMiddleware
+} from "./middleware/security";
+import { monitoringService } from "./services/monitoringService";
 import { authController } from "./controllers/authController";
 import { taskController } from "./controllers/taskController";
 import { financialController } from "./controllers/financialController";
@@ -49,16 +59,49 @@ passport.deserializeUser(async (id: number, done) => {
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Apply security middleware
+  app.use(securityMiddleware);
+  app.use(compressionMiddleware);
+  app.use(requestLoggingMiddleware);
+  app.use(generalRateLimit);
+
   // Health check endpoint for production monitoring
-  app.get('/health', (req, res) => {
-    res.status(200).json({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      version: process.env.APP_VERSION || '1.0.0',
-      environment: process.env.NODE_ENV || 'development'
-    });
+  app.get('/health', async (req, res) => {
+    const health = await monitoringService.getHealthCheck();
+    res.status(health.status === 'healthy' ? 200 : 503).json(health);
   });
+
+  // System metrics endpoint (admin only)
+  app.get('/api/admin/metrics', authMiddleware, requireRole(['admin']), async (req, res) => {
+    try {
+      const metrics = await monitoringService.getSystemMetrics();
+      res.json(metrics);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch metrics' });
+    }
+  });
+
+  // Performance metrics endpoint (admin/pro only)
+  app.get('/api/admin/performance', authMiddleware, requireRole(['admin', 'pro']), async (req, res) => {
+    try {
+      const performance = await monitoringService.getPerformanceMetrics();
+      res.json(performance);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch performance metrics' });
+    }
+  });
+
+  // Usage analytics endpoint (admin only)
+  app.get('/api/admin/analytics/:timeframe?', authMiddleware, requireRole(['admin']), async (req, res) => {
+    try {
+      const timeframe = req.params.timeframe as 'day' | 'week' | 'month' || 'day';
+      const analytics = await monitoringService.getUsageAnalytics(timeframe);
+      res.json(analytics);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
+  });
+
   // Configure session middleware
   app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',
@@ -73,9 +116,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Authentication routes
-  app.post('/api/auth/register', authController.register);
-  app.post('/api/auth/login', authController.login);
+  // Authentication routes (with rate limiting)
+  app.post('/api/auth/register', authRateLimit, authController.register);
+  app.post('/api/auth/login', authRateLimit, authController.login);
   app.post('/api/auth/logout', authController.logout);
   app.get('/api/auth/me', authMiddleware, authController.me);
   app.put('/api/auth/profile', authMiddleware, authController.updateProfile);
@@ -95,17 +138,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/financial/records/:id', authMiddleware, financialController.updateRecord);
   app.delete('/api/financial/records/:id', authMiddleware, financialController.deleteRecord);
 
-  // Voice processing routes
+  // Voice processing routes (with rate limiting)
   app.post('/api/voice/initialize', authMiddleware, voiceController.initialize);
-  app.post('/api/voice/process-command', authMiddleware, voiceController.processCommand);
-  app.post('/api/voice/speak', authMiddleware, voiceController.speak);
+  app.post('/api/voice/process-command', authMiddleware, voiceRateLimit, voiceController.processCommand);
+  app.post('/api/voice/speak', authMiddleware, voiceRateLimit, voiceController.speak);
   app.get('/api/voice/commands', authMiddleware, voiceController.getCommands);
   app.get('/api/voice/status', authMiddleware, voiceController.getStatus);
 
-  // AI routes
+  // AI routes (with rate limiting)
   app.get('/api/ai/daily-joke', aiController.getDailyJoke);
-  app.post('/api/ai/generate-joke', authMiddleware, aiController.generateJoke);
-  app.post('/api/ai/chat', authMiddleware, aiController.chat);
+  app.post('/api/ai/generate-joke', authMiddleware, aiRateLimit, aiController.generateJoke);
+  app.post('/api/ai/chat', authMiddleware, aiRateLimit, aiController.chat);
   app.get('/api/ai/interactions', authMiddleware, aiController.getInteractions);
   app.get('/api/ai/status', authMiddleware, aiController.getStatus);
 

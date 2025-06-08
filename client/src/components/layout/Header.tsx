@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { 
   Moon, 
   Sun, 
@@ -21,10 +22,12 @@ import {
   LogOut, 
   Activity 
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function Header() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
 
   const handleLogout = async () => {
@@ -75,6 +78,9 @@ export default function Header() {
             <Activity className="w-3 h-3 text-green-500 animate-pulse" />
             <span className="text-xs text-muted-foreground hidden sm:inline">Voice Ready</span>
           </div>
+
+          {/* Language Switcher */}
+          <LanguageSwitcher />
 
           {/* Theme Toggle */}
           <Button

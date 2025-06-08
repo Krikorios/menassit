@@ -60,7 +60,7 @@ export const sessions = pgTable("sessions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Tasks table
+// Enhanced Tasks table
 export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -72,22 +72,139 @@ export const tasks = pgTable("tasks", {
   completedAt: timestamp("completed_at"),
   createdViaVoice: boolean("created_via_voice").default(false),
   voiceTranscription: text("voice_transcription"),
+  // Enhanced fields
+  categoryId: integer("category_id").references(() => taskCategories.id),
+  projectId: integer("project_id").references(() => projects.id),
+  parentTaskId: integer("parent_task_id").references(() => tasks.id),
+  assigneeId: integer("assignee_id").references(() => users.id),
+  tags: text("tags").array(),
+  estimatedTime: integer("estimated_time"), // in minutes
+  actualTime: integer("actual_time"), // in minutes
+  attachments: text("attachments").array(),
+  isTemplate: boolean("is_template").default(false),
+  templateId: integer("template_id").references(() => tasks.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Financial records table
+// Task Categories
+export const taskCategories = pgTable("task_categories", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  color: varchar("color", { length: 7 }), // hex color
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Projects
+export const projects = pgTable("projects", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  status: varchar("status", { length: 50 }).notNull().default("active"),
+  color: varchar("color", { length: 7 }),
+  deadline: timestamp("deadline"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Time Tracking
+export const timeTracking = pgTable("time_tracking", {
+  id: serial("id").primaryKey(),
+  taskId: integer("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time"),
+  duration: integer("duration"), // in minutes
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Enhanced Financial records table
 export const financialRecords = pgTable("financial_records", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   type: varchar("type", { length: 10 }).notNull(), // income, expense
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
-  category: text("category").notNull(),
+  categoryId: integer("category_id").references(() => financialCategories.id),
   description: text("description"),
   date: timestamp("date").notNull(),
   createdViaVoice: boolean("created_via_voice").default(false),
   voiceTranscription: text("voice_transcription"),
   metadata: json("metadata"), // For additional data like receipt info
+  // Enhanced fields
+  tags: text("tags").array(),
+  recurringId: integer("recurring_id").references(() => recurringTransactions.id),
+  budgetId: integer("budget_id").references(() => budgets.id),
+  receipt: text("receipt"), // file path or URL
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Financial Categories
+export const financialCategories = pgTable("financial_categories", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  type: varchar("type", { length: 10 }).notNull(), // income, expense
+  color: varchar("color", { length: 7 }),
+  icon: varchar("icon", { length: 50 }),
+  description: text("description"),
+  isDefault: boolean("is_default").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Budgets
+export const budgets = pgTable("budgets", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  categoryId: integer("category_id").references(() => financialCategories.id),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  period: varchar("period", { length: 20 }).notNull(), // monthly, yearly, weekly
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  alertThreshold: integer("alert_threshold").default(80), // percentage
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Recurring Transactions
+export const recurringTransactions = pgTable("recurring_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  type: varchar("type", { length: 10 }).notNull(), // income, expense
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  categoryId: integer("category_id").references(() => financialCategories.id),
+  frequency: varchar("frequency", { length: 20 }).notNull(), // daily, weekly, monthly, yearly
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  nextDue: timestamp("next_due").notNull(),
+  isActive: boolean("is_active").default(true),
+  description: text("description"),
+  tags: text("tags").array(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Bill Reminders
+export const billReminders = pgTable("bill_reminders", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  amount: numeric("amount", { precision: 12, scale: 2 }),
+  dueDate: timestamp("due_date").notNull(),
+  frequency: varchar("frequency", { length: 20 }), // one-time, monthly, yearly
+  categoryId: integer("category_id").references(() => financialCategories.id),
+  reminderDays: integer("reminder_days").array(), // days before due date to remind
+  isPaid: boolean("is_paid").default(false),
+  paidDate: timestamp("paid_date"),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

@@ -1,8 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Sidebar from "@/components/layout/Sidebar";
-import { BarChart3, TrendingUp, TrendingDown, Calendar, Target, DollarSign } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, Calendar, Target, DollarSign, Activity, Brain } from "lucide-react";
+import RealTimeAnalytics from "@/components/analytics/RealTimeAnalytics";
+
+interface Task {
+  id: number;
+  status: string;
+  completed: boolean;
+}
+
+interface FinancialRecord {
+  type: string;
+  amount: number;
+  createdAt: string;
+}
+
+interface FinancialSummary {
+  income: number;
+  expenses: number;
+  net: number;
+}
 
 export default function AnalyticsPage() {
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
@@ -67,13 +87,34 @@ export default function AnalyticsPage() {
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Analytics</h1>
             <p className="text-gray-600 dark:text-gray-300">
-              Insights and performance metrics for your tasks and finances
+              Comprehensive insights and performance metrics
             </p>
           </div>
 
-          {/* Task Analytics */}
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Task Performance</h2>
+          <Tabs defaultValue="realtime" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="realtime" className="flex items-center gap-2">
+                <Activity className="h-4 w-4" />
+                Real-Time Analytics
+              </TabsTrigger>
+              <TabsTrigger value="tasks" className="flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                Tasks
+              </TabsTrigger>
+              <TabsTrigger value="financial" className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4" />
+                Financial
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="realtime" className="space-y-6">
+              <RealTimeAnalytics />
+            </TabsContent>
+
+            <TabsContent value="tasks" className="space-y-6">
+              {/* Task Analytics */}
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Task Performance</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -313,6 +354,64 @@ export default function AnalyticsPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+      </div>
+    </TabsContent>
+
+    <TabsContent value="financial" className="space-y-6">
+      {/* Financial Analytics Content */}
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Financial Overview</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Income</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                ${(financialSummary as any)?.income?.toFixed(2) || '0.00'}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                This month: ${monthlyIncome.toFixed(2)}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+              <TrendingDown className="h-4 w-4 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">
+                ${(financialSummary as any)?.expenses?.toFixed(2) || '0.00'}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                This month: ${monthlyExpenses.toFixed(2)}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Net Worth</CardTitle>
+              <DollarSign className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">
+                ${(financialSummary as any)?.net?.toFixed(2) || '0.00'}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Total financial position
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </TabsContent>
+
+          </Tabs>
         </div>
       </div>
     </div>

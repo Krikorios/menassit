@@ -34,14 +34,17 @@ export default function TasksPage() {
   });
 
   // Fetch tasks
-  const { data: tasks, isLoading } = useQuery({
+  const { data: tasksData, isLoading } = useQuery({
     queryKey: ['/api/tasks'],
     queryFn: async () => {
       const response = await fetch('/api/tasks');
       if (!response.ok) throw new Error('Failed to fetch tasks');
-      return response.json();
+      const data = await response.json();
+      return data;
     }
   });
+
+  const tasks = tasksData?.tasks || [];
 
   // Filter and sort tasks
   const filteredAndSortedTasks = useMemo(() => {

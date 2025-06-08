@@ -214,13 +214,34 @@ export default function ChatPage() {
     return (
       <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
         <Sidebar className="w-64 border-r" />
-        <div className="flex-1 overflow-auto p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-            <div className="grid grid-cols-3 gap-4 h-96">
-              <div className="bg-gray-200 dark:bg-gray-700 rounded"></div>
-              <div className="col-span-2 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        <div className="flex-1 flex">
+          {/* Chat List Skeleton */}
+          <div className="w-80 border-r border-border bg-background">
+            <div className="p-4 border-b">
+              <PageHeader title="Messages" description="Your conversations" />
+            </div>
+            <div className="p-4 space-y-3">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <ListSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+          
+          {/* Chat Content Skeleton */}
+          <div className="flex-1 flex flex-col">
+            <div className="p-4 border-b">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+            <div className="flex-1 p-4 space-y-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <MessageSkeleton key={i} isOwn={i % 3 === 0} />
+              ))}
             </div>
           </div>
         </div>

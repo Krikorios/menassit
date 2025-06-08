@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useVoiceIntegration } from "@/hooks/useVoiceIntegration";
+import { VoiceShortcuts } from "@/components/voice/VoiceShortcuts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -286,6 +287,7 @@ export default function TasksPage() {
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+      <VoiceShortcuts page="tasks" />
       <Sidebar className="w-64 border-r" />
       <div className="flex-1 overflow-auto">
         <div className="p-6">

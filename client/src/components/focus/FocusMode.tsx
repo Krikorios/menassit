@@ -93,7 +93,7 @@ export default function FocusMode({ isOpen, onClose }: FocusModeProps) {
 
   useEffect(() => {
     if (ambientSound && audioRef.current) {
-      audioRef.current.volume = ambientVolume[0] / 100;
+      audioRef.current.volume = (ambientVolume?.[0] ?? 50) / 100;
       if (isActive) {
         audioRef.current.play().catch(console.error);
       } else {
@@ -450,25 +450,7 @@ export default function FocusMode({ isOpen, onClose }: FocusModeProps) {
         />
       )}
 
-      {/* Focus Mode Styles */}
-      <style jsx global>{`
-        .focus-mode-active {
-          --blur-intensity: 0;
-        }
-        
-        .focus-mode-active .floating-voice-control,
-        .focus-mode-active .notification-toast,
-        .focus-mode-active .sidebar-distractions {
-          opacity: 0.3;
-          pointer-events: none;
-          transition: opacity 0.3s ease;
-        }
-        
-        .focus-mode-active .main-content {
-          filter: blur(var(--blur-intensity, 0px));
-          transition: filter 0.3s ease;
-        }
-      `}</style>
+
     </div>
   );
 }

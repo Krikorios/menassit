@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import FocusButton from "@/components/focus/FocusButton";
 import { 
   Moon, 
   Sun, 
@@ -81,6 +82,9 @@ export default function Header() {
 
           {/* Language Switcher */}
           <LanguageSwitcher />
+
+          {/* Focus Mode */}
+          {user && <FocusButton variant="ghost" size="sm" />}
 
           {/* Theme Toggle */}
           <Button

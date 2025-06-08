@@ -107,7 +107,7 @@ export default function LandingPage() {
                   onClick={handleGetStarted}
                   className="flex-1 bg-primary-600 hover:bg-primary-700 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
                 >
-                  Start Free Trial
+                  {t('landing.startFreeTrial')}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
                 <Button 
@@ -116,7 +116,7 @@ export default function LandingPage() {
                   className="px-8 py-4 text-lg font-semibold border-slate-300 dark:border-slate-600 hover:border-primary-300 dark:hover:border-primary-500"
                 >
                   <Play className="w-5 h-5 mr-2" />
-                  View Demo
+                  {t('landing.viewDemo')}
                 </Button>
               </div>
             </div>
@@ -126,7 +126,7 @@ export default function LandingPage() {
               <Card className="shadow-2xl border-slate-200 dark:border-slate-700">
                 <CardContent className="p-8">
                   <div className="text-center space-y-6">
-                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Try Voice Commands</h3>
+                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{t('landing.tryVoiceCommands')}</h3>
                     
                     {/* Voice Visualizer */}
                     <div className="flex justify-center">
@@ -153,16 +153,16 @@ export default function LandingPage() {
                         className="w-full bg-secondary-600 hover:bg-secondary-700 text-white font-medium"
                       >
                         <Mic className="w-4 h-4 mr-2" />
-                        {isListening ? 'Stop Listening' : 'Start Voice Demo'}
+                        {isListening ? t('landing.stopListening') : t('landing.startVoiceDemo')}
                       </Button>
                       
                       <div className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
-                        <p className="font-medium">Try saying:</p>
+                        <p className="font-medium">{t('landing.trySaying')}</p>
                         <Card className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700">
                           <CardContent className="p-3 text-left space-y-1">
-                            <p>"Create a task to review budget"</p>
-                            <p>"Add $50 expense for groceries"</p>
-                            <p>"Show me today's schedule"</p>
+                            <p>"{t('landing.createTaskExample')}"</p>
+                            <p>"{t('landing.addExpenseExample')}"</p>
+                            <p>"{t('landing.showScheduleExample')}"</p>
                           </CardContent>
                         </Card>
                       </div>
@@ -179,10 +179,10 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white mb-4">
-                Complete Offline Voice AI
+                {t('landing.completeOfflineVoiceAI')}
               </h2>
               <p className="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto">
-                Enterprise-grade task and financial management with local AI processing
+                {t('landing.enterpriseGradeDesc')}
               </p>
             </div>
 

@@ -1,94 +1,100 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { PageHeader } from "@/components/ui/page-header";
-import { useToast } from "@/hooks/use-toast";
-import Sidebar from "@/components/layout/Sidebar";
-import { Plus, DollarSign, TrendingUp, TrendingDown } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { apiRequest } from "@/lib/queryClient";
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/ui/page-header';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
+import Sidebar from '@/components/layout/Sidebar';
+import { Plus, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 
 export default function FinancesPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [newRecord, setNewRecord] = useState({
-    type: "expense",
-    amount: "",
-    description: "",
-    category: "",
+    type: 'expense' as 'income' | 'expense',
+    amount: '',
+    category: '',
+    description: ''
   });
 
-  const { data: recordsResponse, isLoading: recordsLoading } = useQuery({
-    queryKey: ["/api/financial/records"],
+  // Fetch financial records
+  const { data: records, isLoading } = useQuery({
+    queryKey: ['/api/financial-records'],
+    queryFn: async () => {
+      const response = await fetch('/api/financial-records');
+      if (!response.ok) throw new Error('Failed to fetch records');
+      return response.json();
+    }
   });
 
-  const { data: summaryResponse, isLoading: summaryLoading } = useQuery({
-    queryKey: ["/api/financial/summary"],
+  // Fetch financial summary
+  const { data: summary } = useQuery({
+    queryKey: ['/api/financial-records/summary'],
+    queryFn: async () => {
+      const response = await fetch('/api/financial-records/summary');
+      if (!response.ok) throw new Error('Failed to fetch summary');
+      return response.json();
+    }
   });
 
-  const records = (recordsResponse as any)?.records || [];
-  const summary = (summaryResponse as any)?.summary || { income: 0, expenses: 0, net: 0 };
-
-  const createRecordMutation = useMutation({
-    mutationFn: async (record: typeof newRecord) => {
-      const response = await fetch("/api/financial/records", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+  // Create record mutation
+  const createMutation = useMutation({
+    mutationFn: async (recordData: typeof newRecord) => {
+      const response = await fetch('/api/financial-records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...record,
-          amount: parseFloat(record.amount),
-        }),
-        credentials: "include",
+          ...recordData,
+          amount: parseFloat(recordData.amount)
+        })
       });
-      if (!response.ok) throw new Error("Failed to create record");
+      if (!response.ok) throw new Error('Failed to create record');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/financial/records"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/financial/summary"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/financial-records'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/financial-records/summary'] });
       setOpen(false);
-      setNewRecord({ type: "expense", amount: "", description: "", category: "" });
-      toast({
-        title: "Record created",
-        description: "Your financial record has been successfully created.",
-      });
+      setNewRecord({ type: 'expense', amount: '', category: '', description: '' });
+      toast({ title: "Record created successfully!" });
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to create record. Please try again.",
-        variant: "destructive",
-      });
-    },
+      toast({ title: "Failed to create record", variant: "destructive" });
+    }
   });
 
-  const handleCreateRecord = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newRecord.amount || isNaN(parseFloat(newRecord.amount))) {
-      toast({
-        title: "Invalid amount",
-        description: "Please enter a valid amount.",
-        variant: "destructive",
-      });
+    if (!newRecord.amount || !newRecord.category) {
+      toast({ title: "Please fill in all required fields", variant: "destructive" });
       return;
     }
-    createRecordMutation.mutate(newRecord);
+    createMutation.mutate(newRecord);
   };
 
-  const categories = {
-    income: ["Salary", "Freelance", "Investment", "Business", "Other"],
-    expense: ["Food", "Transportation", "Housing", "Entertainment", "Healthcare", "Shopping", "Other"],
-  };
+  // Income categories
+  const incomeCategories = [
+    'Salary', 'Freelancing', 'Investment', 'Business', 'Gift', 'Other'
+  ];
 
-  if (recordsLoading || summaryLoading) {
+  // Expense categories
+  const expenseCategories = [
+    'Food', 'Transportation', 'Housing', 'Utilities', 'Healthcare', 
+    'Entertainment', 'Shopping', 'Education', 'Travel', 'Other'
+  ];
+
+  const categories = newRecord.type === 'income' ? incomeCategories : expenseCategories;
+
+  // Loading state
+  if (isLoading) {
     return (
       <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
         <Sidebar className="w-64 border-r" />
@@ -97,7 +103,7 @@ export default function FinancesPage() {
             <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
             <div className="grid grid-cols-3 gap-4">
-              {[1, 2, 3].map((i) => (
+              {[...Array(3)].map((_, i) => (
                 <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
               ))}
             </div>
@@ -132,57 +138,8 @@ export default function FinancesPage() {
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="amount">Amount</Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      step="0.01"
-                      value={formData.amount}
-                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
                     <Label htmlFor="type">Type</Label>
-                    <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="income">Income</SelectItem>
-                        <SelectItem value="expense">Expense</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Input
-                      id="category"
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    />
-                  </div>
-                  <Button type="submit" disabled={createMutation.isPending}>
-                    {createMutation.isPending ? "Adding..." : "Add Record"}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </PageHeader>
-
-          <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="type">Type</Label>
-                    <Select value={newRecord.type} onValueChange={(value) => setNewRecord({ ...newRecord, type: value, category: "" })}>
+                    <Select value={newRecord.type} onValueChange={(value: any) => setNewRecord({ ...newRecord, type: value, category: '' })}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -211,8 +168,8 @@ export default function FinancesPage() {
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories[newRecord.type as keyof typeof categories].map((category) => (
-                          <SelectItem key={category} value={category}>
+                        {categories.map((category) => (
+                          <SelectItem key={category} value={category.toLowerCase()}>
                             {category}
                           </SelectItem>
                         ))}
@@ -221,112 +178,108 @@ export default function FinancesPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="description">Description</Label>
-                    <Input
+                    <Textarea
                       id="description"
-                      placeholder="Brief description"
+                      placeholder="Optional description..."
                       value={newRecord.description}
                       onChange={(e) => setNewRecord({ ...newRecord, description: e.target.value })}
                     />
                   </div>
-                  <Button type="submit" disabled={createRecordMutation.isPending}>
-                    {createRecordMutation.isPending ? "Adding..." : "Add Record"}
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending ? "Adding..." : "Add Record"}
                   </Button>
                 </form>
               </DialogContent>
             </Dialog>
-          </div>
+          </PageHeader>
 
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Income</CardTitle>
-                <TrendingUp className="h-4 w-4 text-green-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
-                  ${summary.income.toFixed(2)}
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-                <TrendingDown className="h-4 w-4 text-red-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-600">
-                  ${summary.expenses.toFixed(2)}
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Net Balance</CardTitle>
-                <DollarSign className="h-4 w-4 text-blue-600" />
-              </CardHeader>
-              <CardContent>
-                <div className={`text-2xl font-bold ${summary.net >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  ${summary.net.toFixed(2)}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <div className="space-y-6">
+            {/* Financial Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Income</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-green-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">
+                    ${summary?.income?.toFixed(2) || '0.00'}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+                  <TrendingDown className="h-4 w-4 text-red-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-600">
+                    ${summary?.expenses?.toFixed(2) || '0.00'}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Net Balance</CardTitle>
+                  <DollarSign className="h-4 w-4 text-blue-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-2xl font-bold ${(summary?.net || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    ${summary?.net?.toFixed(2) || '0.00'}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-          {/* Records List */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Transactions</CardTitle>
-              <CardDescription>
-                Your latest financial transactions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {records.length === 0 ? (
-                <div className="text-center py-6">
-                  <DollarSign className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    No records yet
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4">
-                    Start tracking your finances by adding your first record.
-                  </p>
-                  <Button onClick={() => setOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Record
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {records.map((record: any) => (
-                    <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <div className={`p-2 rounded-full ${record.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                          {record.type === 'income' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                        </div>
-                        <div>
-                          <div className="font-medium">{record.description || record.category}</div>
-                          <div className="text-sm text-gray-600 dark:text-gray-300">
-                            {record.category} • {new Date(record.createdAt).toLocaleDateString()}
+            {/* Recent Transactions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Transactions</CardTitle>
+                <CardDescription>
+                  Your latest financial records
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {!records || records.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground mb-4">
+                      No financial records yet. Start by adding your first transaction.
+                    </p>
+                    <Button onClick={() => setOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Record
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {records.map((record: any) => (
+                      <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <div className={`p-2 rounded-full ${record.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                            {record.type === 'income' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                          </div>
+                          <div>
+                            <div className="font-medium">{record.description || record.category}</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                              {record.category} • {new Date(record.createdAt).toLocaleDateString()}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <div className={`font-semibold ${record.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                          {record.type === 'income' ? '+' : '-'}${record.amount.toFixed(2)}
+                        <div className="text-right">
+                          <div className={`font-semibold ${record.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                            {record.type === 'income' ? '+' : '-'}${record.amount.toFixed(2)}
+                          </div>
+                          <Badge variant={record.type === 'income' ? 'default' : 'secondary'}>
+                            {record.type}
+                          </Badge>
                         </div>
-                        <Badge variant={record.type === 'income' ? 'default' : 'secondary'}>
-                          {record.type}
-                        </Badge>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

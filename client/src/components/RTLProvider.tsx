@@ -28,9 +28,14 @@ export function RTLProvider({ children }: RTLProviderProps) {
     document.documentElement.setAttribute('dir', direction);
     document.documentElement.setAttribute('lang', i18n.language);
     
-    // Apply Arabic font optimization
+    // Apply Arabic font optimization and performance tracking
     if (isRTL) {
       document.body.classList.add('arabic-text');
+      arabicFontOptimizer.optimizeArabicFonts(i18n.language);
+      // Track performance after a brief delay to allow font loading
+      setTimeout(() => {
+        arabicPerformanceTracker.trackRTLPerformance(i18n.language);
+      }, 100);
     } else {
       document.body.classList.remove('arabic-text');
     }

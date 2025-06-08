@@ -18,6 +18,7 @@ import {
 } from "./middleware/security";
 import { monitoringService } from "./services/monitoringService";
 import { taskScheduler } from "./services/taskScheduler";
+import { performanceOptimizationService } from "./services/performanceOptimization";
 import { authController } from "./controllers/authController";
 import { taskController } from "./controllers/taskController";
 import { financialController } from "./controllers/financialController";
@@ -100,6 +101,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(analytics);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
+  });
+
+  // Arabic performance analytics endpoint
+  app.post('/api/analytics/arabic-performance', (req: Request, res: Response) => {
+    try {
+      const { metrics, issues, userAgent, timestamp } = req.body;
+      
+      // Log Arabic performance data for monitoring
+      console.log('[Arabic Performance]', {
+        rtlRenderTime: metrics.rtlRenderTime,
+        fontLoadTime: metrics.fontLoadTime,
+        layoutShiftScore: metrics.layoutShiftScore,
+        textDirectionSwitchTime: metrics.textDirectionSwitchTime,
+        arabicTextRenderScore: metrics.arabicTextRenderScore,
+        issues: issues.length,
+        userAgent: userAgent?.substring(0, 100),
+        timestamp
+      });
+      
+      res.json({ status: 'recorded' });
+    } catch (error) {
+      console.warn('Failed to record Arabic performance data:', error);
+      res.status(500).json({ error: 'Failed to record performance data' });
     }
   });
 

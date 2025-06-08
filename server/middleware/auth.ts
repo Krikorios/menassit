@@ -6,18 +6,16 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  if (!req.user) {
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
     return res.status(401).json({ error: 'Authentication required' });
   }
   
   try {
-    // Refresh user data from database
-    const user = await storage.getUser(req.user.id);
-    if (!user) {
+    // User is already available from Passport session
+    if (!req.user) {
       return res.status(401).json({ error: 'User not found' });
     }
     
-    req.user = user;
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);

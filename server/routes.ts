@@ -76,6 +76,22 @@ passport.deserializeUser(async (id: number, done) => {
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Session configuration
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'menassist-secret-key-2025',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // Set to true in production with HTTPS
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  }));
+
+  // Initialize Passport
+  app.use(passport.initialize());
+  app.use(passport.session());
+
   // Apply security middleware
   app.use(securityMiddleware);
   app.use(compressionMiddleware);

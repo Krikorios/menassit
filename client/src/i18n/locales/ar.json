@@ -311,9 +311,15 @@
     "onPremiseDeployment": "نشر محلي",
     "encryptedStorage": "تخزين محلي مشفر",
     "realTimeProcessing": "معالجة فورية",
-    "realTimeDesc": "تحويل فوري من الصوت إلى النص واستجابات ذكية فورية للتفاعل السلس.",
+    "realTimeProcessingDesc": "تحويل فوري من الصوت إلى النص واستجابات ذكية فورية للتفاعل السلس.",
     "subSecondResponse": "وقت استجابة أقل من ثانية",
-    "continuousListening": "وضع الاستماع المستمر"
+    "continuousListening": "وضع الاستماع المستمر",
+    "completePrivacyDesc": "تتم جميع معالجات الصوت محلياً. لا اعتماد على السحابة، سيادة كاملة للبيانات.",
+    "multiTierAccess": "وصول متعدد المستويات",
+    "multiTierDesc": "أدوار المستخدمين العادي والمحترف والإداري مع فتح التقني التدريجي والإرشاد.",
+    "progressiveOnboarding": "إرشاد تدريجي",
+    "featureBasedPermissions": "صلاحيات قائمة على الميزات",
+    "voiceTaskCreationDesc": "إنشاء وتحديث وإدارة المهام باستخدام أوامر صوتية طبيعية مع تحليل ذكي."
   },
   "dashboard": {
     "title": "لوحة التحكم",

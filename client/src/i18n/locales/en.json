@@ -350,9 +350,15 @@
     "onPremiseDeployment": "On-premise deployment",
     "encryptedStorage": "Encrypted local storage",
     "realTimeProcessing": "Real-time Processing",
-    "realTimeDesc": "Instant voice-to-text conversion and immediate AI responses for seamless interaction.",
+    "realTimeProcessingDesc": "Instant voice-to-text conversion and immediate AI responses for seamless interaction.",
     "subSecondResponse": "Sub-second response time",
-    "continuousListening": "Continuous listening mode"
+    "continuousListening": "Continuous listening mode",
+    "completePrivacyDesc": "All voice processing happens locally. Zero cloud dependencies, complete data sovereignty.",
+    "multiTierAccess": "Multi-Tier Access",
+    "multiTierDesc": "Standard, Pro, and Admin user roles with progressive feature unlocking and onboarding.",
+    "progressiveOnboarding": "Progressive onboarding",
+    "featureBasedPermissions": "Feature-based permissions",
+    "voiceTaskCreationDesc": "Create, update, and manage tasks using natural voice commands with intelligent parsing."
   },
   "dashboard": {
     "title": "Dashboard",

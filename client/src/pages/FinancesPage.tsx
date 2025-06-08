@@ -23,13 +23,16 @@ export default function FinancesPage() {
     category: "",
   });
 
-  const { data: records = [], isLoading: recordsLoading } = useQuery({
+  const { data: recordsResponse, isLoading: recordsLoading } = useQuery({
     queryKey: ["/api/financial/records"],
   });
 
-  const { data: summary = { income: 0, expenses: 0, net: 0 }, isLoading: summaryLoading } = useQuery({
+  const { data: summaryResponse, isLoading: summaryLoading } = useQuery({
     queryKey: ["/api/financial/summary"],
   });
+
+  const records = (recordsResponse as any)?.records || [];
+  const summary = (summaryResponse as any)?.summary || { income: 0, expenses: 0, net: 0 };
 
   const createRecordMutation = useMutation({
     mutationFn: (record: typeof newRecord) =>

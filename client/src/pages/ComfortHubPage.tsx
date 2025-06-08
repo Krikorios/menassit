@@ -20,6 +20,7 @@ import {
 import ComfortZone from '@/components/comfort/ComfortZone';
 import SmartAssistant from '@/components/comfort/SmartAssistant';
 import AdaptiveInterface from '@/components/comfort/AdaptiveInterface';
+import WorkspaceLayoutAI from '@/components/workspace/WorkspaceLayoutAI';
 
 const ComfortHubPage = () => {
   const { t } = useTranslation();
@@ -210,7 +211,7 @@ const ComfortHubPage = () => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Overview
@@ -226,6 +227,10 @@ const ComfortHubPage = () => {
             <TabsTrigger value="adaptive" className="flex items-center gap-2">
               <Zap className="h-4 w-4" />
               Adaptive Interface
+            </TabsTrigger>
+            <TabsTrigger value="workspace" className="flex items-center gap-2">
+              <Brain className="h-4 w-4" />
+              AI Workspace
             </TabsTrigger>
           </TabsList>
 
@@ -328,6 +333,17 @@ const ComfortHubPage = () => {
                 transition={{ duration: 0.3 }}
               >
                 <AdaptiveInterface />
+              </motion.div>
+            </TabsContent>
+
+            <TabsContent value="workspace" className="mt-0">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <WorkspaceLayoutAI />
               </motion.div>
             </TabsContent>
           </AnimatePresence>

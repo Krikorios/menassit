@@ -193,18 +193,18 @@ export default function LandingPage() {
                   <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-xl flex items-center justify-center mb-4">
                     <Brain className="w-6 h-6 text-primary-600 dark:text-primary-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">Local AI Models</h3>
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">{t('landing.localAIModels')}</h3>
                   <p className="text-slate-600 dark:text-slate-300 mb-4">
-                    Speech-to-text and text-to-speech processing entirely offline. No data leaves your premises.
+                    {t('landing.localAIDesc')}
                   </p>
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-slate-500 dark:text-slate-400">Base models included</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">{t('landing.baseModelsIncluded')}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-slate-500 dark:text-slate-400">Swappable model architecture</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">{t('landing.swappableArchitecture')}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -216,18 +216,18 @@ export default function LandingPage() {
                   <div className="w-12 h-12 bg-secondary-100 dark:bg-secondary-900 rounded-xl flex items-center justify-center mb-4">
                     <Calendar className="w-6 h-6 text-secondary-600 dark:text-secondary-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">Voice Task Creation</h3>
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">{t('landing.voiceTaskCreation')}</h3>
                   <p className="text-slate-600 dark:text-slate-300 mb-4">
-                    Create, update, and manage tasks using natural voice commands with intelligent parsing.
+                    {t('landing.voiceTaskCreationDesc')}
                   </p>
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-slate-500 dark:text-slate-400">Natural language processing</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">{t('landing.naturalLanguageProcessing')}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-slate-500 dark:text-slate-400">Smart date/time extraction</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">{t('landing.smartDateExtraction')}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -239,18 +239,18 @@ export default function LandingPage() {
                   <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900 rounded-xl flex items-center justify-center mb-4">
                     <DollarSign className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">Voice Financial Tracking</h3>
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">{t('landing.voiceFinancialTracking')}</h3>
                   <p className="text-slate-600 dark:text-slate-300 mb-4">
-                    Record expenses and income through voice with automatic categorization and receipt parsing.
+                    {t('landing.voiceFinancialDesc')}
                   </p>
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-slate-500 dark:text-slate-400">Auto-categorization</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">{t('landing.autoCategorization')}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-slate-500 dark:text-slate-400">Receipt OCR integration</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">{t('landing.receiptOCR')}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -262,18 +262,18 @@ export default function LandingPage() {
                   <div className="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-xl flex items-center justify-center mb-4">
                     <Shield className="w-6 h-6 text-red-600 dark:text-red-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">Complete Privacy</h3>
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">{t('landing.completePrivacy')}</h3>
                   <p className="text-slate-600 dark:text-slate-300 mb-4">
-                    All voice processing happens locally. Zero cloud dependencies, complete data sovereignty.
+                    {t('landing.completePrivacyDesc')}
                   </p>
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-slate-500 dark:text-slate-400">On-premise deployment</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">{t('landing.onPremiseDeployment')}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-slate-500 dark:text-slate-400">Encrypted local storage</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">{t('landing.encryptedStorage')}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -285,18 +285,18 @@ export default function LandingPage() {
                   <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900 rounded-xl flex items-center justify-center mb-4">
                     <Zap className="w-6 h-6 text-amber-600 dark:text-amber-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">Real-time Processing</h3>
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">{t('landing.realTimeProcessing')}</h3>
                   <p className="text-slate-600 dark:text-slate-300 mb-4">
-                    Instant voice-to-text conversion and immediate AI responses for seamless interaction.
+                    {t('landing.realTimeProcessingDesc')}
                   </p>
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-slate-500 dark:text-slate-400">Sub-second response time</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">{t('landing.subSecondResponse')}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-slate-500 dark:text-slate-400">Continuous listening mode</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">{t('landing.continuousListening')}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -308,18 +308,18 @@ export default function LandingPage() {
                   <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-xl flex items-center justify-center mb-4">
                     <Volume2 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">Multi-Tier Access</h3>
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">{t('landing.multiTierAccess')}</h3>
                   <p className="text-slate-600 dark:text-slate-300 mb-4">
-                    Standard, Pro, and Admin user roles with progressive feature unlocking and onboarding.
+                    {t('landing.multiTierDesc')}
                   </p>
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-slate-500 dark:text-slate-400">Progressive onboarding</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">{t('landing.progressiveOnboarding')}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-slate-500 dark:text-slate-400">Feature-based permissions</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">{t('landing.featureBasedPermissions')}</span>
                     </div>
                   </div>
                 </CardContent>

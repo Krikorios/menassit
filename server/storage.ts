@@ -479,20 +479,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProfessionalServices(type?: string, location?: string): Promise<ProfessionalService[]> {
-    let query = db
-      .select()
-      .from(professionalServices)
-      .where(eq(professionalServices.isActive, true));
+    try {
+      let query = db
+        .select()
+        .from(professionalServices)
+        .where(eq(professionalServices.isActive, true));
 
-    if (type) {
-      query = query.where(eq(professionalServices.serviceType, type));
-    }
-    
-    if (location) {
-      query = query.where(eq(professionalServices.location, location));
-    }
+      if (type) {
+        query = query.where(eq(professionalServices.type, type));
+      }
+      
+      if (location) {
+        query = query.where(eq(professionalServices.location, location));
+      }
 
-    return await query.orderBy(desc(professionalServices.rating));
+      return await query.orderBy(desc(professionalServices.rating));
+    } catch (error) {
+      console.error('Database error in getProfessionalServices:', error);
+      return [];
+    }
   }
 
   async updateProfessionalService(id: number, userId: number, updates: Partial<ProfessionalService>): Promise<ProfessionalService | undefined> {

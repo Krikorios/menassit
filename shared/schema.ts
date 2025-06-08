@@ -359,20 +359,18 @@ export const messageStatuses = pgTable("message_statuses", {
 // Professional services table
 export const professionalServices = pgTable("professional_services", {
   id: serial("id").primaryKey(),
-  providerId: integer("provider_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  providerId: integer("provider_id").references(() => users.id, { onDelete: "cascade" }),
+  name: text("name"),
+  title: text("title"),
   description: text("description"),
-  type: professionalTypeEnum("type").notNull(),
+  serviceType: professionalTypeEnum("service_type").notNull(),
   specializations: text("specializations").array(),
-  hourlyRate: numeric("hourly_rate", { precision: 10, scale: 2 }),
-  currency: varchar("currency", { length: 3 }).default("OMR"),
-  availability: json("availability").$type<{
-    [key: string]: { start: string; end: string; available: boolean }[]
-  }>(),
+  priceRange: text("price_range"),
+  availabilitySchedule: text("availability_schedule"),
   location: text("location"),
-  isOnline: boolean("is_online").default(false),
   rating: numeric("rating", { precision: 3, scale: 2 }),
-  reviewCount: integer("review_count").default(0),
+  totalReviews: integer("total_reviews").default(0),
   isVerified: boolean("is_verified").default(false),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),

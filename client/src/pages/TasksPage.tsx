@@ -48,7 +48,7 @@ export default function TasksPage() {
 
   // Filter and sort tasks
   const filteredAndSortedTasks = useMemo(() => {
-    if (!tasks) return [];
+    if (!Array.isArray(tasks)) return [];
     
     const filtered = tasks.filter((task: any) => {
       const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -68,9 +68,9 @@ export default function TasksPage() {
           bValue = b.title.toLowerCase();
           break;
         case "priority":
-          const priorityOrder = { high: 3, medium: 2, low: 1 };
-          aValue = priorityOrder[a.priority] || 0;
-          bValue = priorityOrder[b.priority] || 0;
+          const priorityOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
+          aValue = priorityOrder[a.priority as string] || 0;
+          bValue = priorityOrder[b.priority as string] || 0;
           break;
         case "dueDate":
           aValue = a.dueDate ? new Date(a.dueDate) : new Date('9999-12-31');

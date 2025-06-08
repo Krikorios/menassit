@@ -38,14 +38,12 @@ export default function AIPage() {
     setIsLoading(true);
 
     try {
-      const response = await apiRequest("/api/ai/chat", {
-        method: "POST",
-        body: JSON.stringify({ message }),
-      });
+      const response = await apiRequest("POST", "/api/ai/chat", { message });
+      const data = await response.json();
       
       const aiMessage = { 
         role: "assistant", 
-        content: response.content || "I'm here to help! How can I assist you today?", 
+        content: data.content || "I'm here to help! How can I assist you today?", 
         timestamp: new Date() 
       };
       setChatHistory(prev => [...prev, aiMessage]);

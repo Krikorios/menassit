@@ -75,15 +75,10 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      
-      <div className="dashboard-grid">
-        {/* Sidebar */}
-        <Sidebar className="hidden md:block" />
-        
-        {/* Main Content */}
-        <main className="flex-1 p-6 overflow-auto">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Sidebar className="w-64 border-r" />
+      <div className="flex-1 overflow-auto">
+        <div className="p-6">
           <div className="max-w-7xl mx-auto space-y-6">
             
             {/* Welcome Header */}
@@ -265,11 +260,11 @@ export default function DashboardPage() {
               </Card>
             )}
           </div>
-        </main>
+        </div>
       </div>
 
       {/* Global Voice Indicator */}
-      <VoiceIndicator showControls />
+      <VoiceIndicator />
     </div>
   );
 }

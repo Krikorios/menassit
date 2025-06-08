@@ -243,7 +243,20 @@ export default function SettingsPage() {
                         Switch between light and dark themes
                       </p>
                     </div>
-                    <Switch />
+                    <Switch 
+                      checked={theme === 'dark'}
+                      onCheckedChange={toggleTheme}
+                    />
+                  </div>
+                  <Separator />
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Language</Label>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        Choose your preferred language
+                      </p>
+                      <LanguageSwitcher />
+                    </div>
                   </div>
                 </CardContent>
               </Card>

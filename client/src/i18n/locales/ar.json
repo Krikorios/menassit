@@ -234,7 +234,8 @@
     "voiceActivated": "مفعل صوتياً",
     "speakingRate": "معدل الكلام",
     "voicePitch": "نبرة الصوت",
-    "voiceVolume": "مستوى الصوت"
+    "voiceVolume": "مستوى الصوت",
+    "ready": "الصوت جاهز"
   },
   "settings": {
     "title": "الإعدادات",

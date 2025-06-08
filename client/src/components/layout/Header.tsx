@@ -65,7 +65,7 @@ export default function Header() {
               href="/dashboard"
               className="transition-colors hover:text-foreground/80 text-foreground"
             >
-              Dashboard
+              {t('navigation.dashboard')}
             </Link>
           </nav>
         )}
@@ -77,7 +77,7 @@ export default function Header() {
           {/* Voice Status Indicator */}
           <div className="flex items-center space-x-2 bg-muted/50 px-3 py-1 rounded-full">
             <Activity className="w-3 h-3 text-green-500 animate-pulse" />
-            <span className="text-xs text-muted-foreground hidden sm:inline">Voice Ready</span>
+            <span className="text-xs text-muted-foreground hidden sm:inline">{t('voice.ready')}</span>
           </div>
 
           {/* Language Switcher */}
@@ -132,26 +132,26 @@ export default function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setLocation("/settings")}>
                   <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
+                  <span>{t('navigation.settings')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setLocation("/profile")}>
                   <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+                  <span>{t('navigation.profile')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <span>{t('navigation.logout')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <div className="flex items-center space-x-2">
               <Button variant="ghost" size="sm" onClick={() => setLocation("/login")}>
-                Sign In
+                {t('auth.login')}
               </Button>
               <Button size="sm" onClick={() => setLocation("/login")}>
-                Get Started
+                {t('auth.register')}
               </Button>
             </div>
           )}

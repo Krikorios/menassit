@@ -1,28 +1,34 @@
-import { useState, useMemo, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { useVoiceIntegration } from "@/hooks/useVoiceIntegration";
-import { VoiceShortcuts } from "@/components/voice/VoiceShortcuts";
-import { ProjectManager } from "@/components/tasks/ProjectManager";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageHeader } from "@/components/ui/page-header";
-import { useToast } from "@/hooks/use-toast";
-import Sidebar from "@/components/layout/Sidebar";
+import { useState, useEffect, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ProjectManager } from '@/components/tasks/ProjectManager';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/ui/page-header';
+import { useToast } from '@/hooks/use-toast';
+import VoiceShortcuts from '@/components/voice/VoiceShortcuts';
+import Sidebar from '@/components/layout/Sidebar';
 import { 
-  Plus, Calendar, Clock, Search, Filter, Trash2, CheckCircle2, 
-  PlayCircle, MoreHorizontal, Edit, ArrowUpDown, AlertTriangle, FolderOpen 
-} from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { apiRequest } from "@/lib/queryClient";
+  Plus, 
+  Search, 
+  Filter, 
+  FolderOpen,
+  Calendar,
+  Clock,
+  CheckCircle2,
+  Circle,
+  ArrowUpDown,
+  MoreHorizontal,
+  Edit,
+  Trash2
+} from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
 
 interface Task {
   id: number;
@@ -38,10 +44,8 @@ interface Task {
 export default function TasksPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { speak } = useVoiceIntegration();
   const [open, setOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [selectedTasks, setSelectedTasks] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
@@ -51,191 +55,170 @@ export default function TasksPage() {
     title: "",
     description: "",
     priority: "medium" as const,
-    dueDate: "",
+    dueDate: ""
   });
 
-  const { data: tasksResponse, isLoading } = useQuery({
-    queryKey: ["/api/tasks"],
-  });
-
-  const allTasks: Task[] = (tasksResponse as any)?.tasks || [];
-
-  // Voice announcement when page loads
+  // Debounced search
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   useEffect(() => {
-    if (allTasks.length > 0) {
-      const timer = setTimeout(() => {
-        speak(`Tasks page loaded. You have ${allTasks.length} tasks. Say "create task" followed by a task name to add a new task.`);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [allTasks.length, speak]);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-  // Enhanced filtering and sorting
+  // Filter and sort tasks
   const filteredAndSortedTasks = useMemo(() => {
-    let filtered = allTasks.filter((task) => {
-      const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (task.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+    if (!tasks) return [];
+    
+    const filtered = tasks.filter((task: Task) => {
+      const matchesSearch = task.title.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+                           task.description?.toLowerCase().includes(debouncedSearch.toLowerCase());
       const matchesStatus = statusFilter === "all" || task.status === statusFilter;
       const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter;
+      
       return matchesSearch && matchesStatus && matchesPriority;
     });
 
-    filtered.sort((a, b) => {
-      let aValue, bValue;
+    return filtered.sort((a: Task, b: Task) => {
+      let aValue: any, bValue: any;
+      
       switch (sortBy) {
         case "title":
           aValue = a.title.toLowerCase();
           bValue = b.title.toLowerCase();
           break;
         case "priority":
-          const priorityOrder = { low: 1, medium: 2, high: 3 };
+          const priorityOrder = { high: 3, medium: 2, low: 1 };
           aValue = priorityOrder[a.priority];
           bValue = priorityOrder[b.priority];
           break;
         case "dueDate":
-          aValue = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
-          bValue = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+          aValue = a.dueDate ? new Date(a.dueDate) : new Date('9999-12-31');
+          bValue = b.dueDate ? new Date(b.dueDate) : new Date('9999-12-31');
           break;
         default:
-          aValue = new Date(a.createdAt).getTime();
-          bValue = new Date(b.createdAt).getTime();
+          aValue = new Date(a.createdAt);
+          bValue = new Date(b.createdAt);
       }
-
+      
       if (sortOrder === "asc") {
         return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
       } else {
         return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
       }
     });
-
+    
     return filtered;
-  }, [allTasks, searchQuery, statusFilter, priorityFilter, sortBy, sortOrder]);
+  }, [tasks, debouncedSearch, statusFilter, priorityFilter, sortBy, sortOrder]);
 
+  // Fetch tasks
+  const { data: tasks, isLoading } = useQuery({
+    queryKey: ['/api/tasks'],
+    queryFn: async () => {
+      const response = await fetch('/api/tasks');
+      if (!response.ok) throw new Error('Failed to fetch tasks');
+      return response.json();
+    }
+  });
+
+  // Create task mutation
   const createTaskMutation = useMutation({
-    mutationFn: async (task: typeof newTask) => {
-      const response = await fetch("/api/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(task),
-        credentials: "include",
+    mutationFn: async (taskData: typeof newTask) => {
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(taskData)
       });
-      if (!response.ok) throw new Error("Failed to create task");
+      if (!response.ok) throw new Error('Failed to create task');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       setOpen(false);
       setNewTask({ title: "", description: "", priority: "medium", dueDate: "" });
-      toast({
-        title: "Task created",
-        description: "Your task has been successfully created.",
-      });
+      toast({ title: "Task created successfully!" });
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to create task. Please try again.",
-        variant: "destructive",
-      });
-    },
+      toast({ title: "Failed to create task", variant: "destructive" });
+    }
   });
 
+  // Update task mutation
   const updateTaskMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: number; updates: Partial<Task> }) => {
+    mutationFn: async ({ id, ...updates }: Partial<Task> & { id: number }) => {
       const response = await fetch(`/api/tasks/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updates),
-        credentials: "include",
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
       });
-      if (!response.ok) throw new Error("Failed to update task");
+      if (!response.ok) throw new Error('Failed to update task');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       setEditingTask(null);
-      toast({
-        title: "Task updated",
-        description: "Task has been successfully updated.",
-      });
+      toast({ title: "Task updated successfully!" });
     },
+    onError: () => {
+      toast({ title: "Failed to update task", variant: "destructive" });
+    }
   });
 
+  // Delete task mutation
   const deleteTaskMutation = useMutation({
     mutationFn: async (id: number) => {
       const response = await fetch(`/api/tasks/${id}`, {
-        method: "DELETE",
-        credentials: "include",
+        method: 'DELETE'
       });
-      if (!response.ok) throw new Error("Failed to delete task");
+      if (!response.ok) throw new Error('Failed to delete task');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-      toast({
-        title: "Task deleted",
-        description: "Task has been successfully deleted.",
-      });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      toast({ title: "Task deleted successfully!" });
     },
-  });
-
-  const bulkUpdateMutation = useMutation({
-    mutationFn: async ({ ids, updates }: { ids: number[]; updates: Partial<Task> }) => {
-      await Promise.all(
-        ids.map(id =>
-          fetch(`/api/tasks/${id}`, {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(updates),
-            credentials: "include",
-          })
-        )
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-      setSelectedTasks([]);
-      toast({
-        title: "Tasks updated",
-        description: `${selectedTasks.length} tasks have been updated.`,
-      });
-    },
+    onError: () => {
+      toast({ title: "Failed to delete task", variant: "destructive" });
+    }
   });
 
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
     createTaskMutation.mutate(newTask);
-    speak(`Creating task "${newTask.title}"`);
   };
 
   const handleEditTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingTask) {
-      updateTaskMutation.mutate({ id: editingTask.id, updates: editingTask });
+      updateTaskMutation.mutate(editingTask);
     }
   };
 
-  const handleSelectTask = (taskId: number, checked: boolean) => {
-    if (checked) {
-      setSelectedTasks([...selectedTasks, taskId]);
-    } else {
-      setSelectedTasks(selectedTasks.filter(id => id !== taskId));
+  const handleStatusChange = (taskId: number, newStatus: Task['status']) => {
+    updateTaskMutation.mutate({ id: taskId, status: newStatus });
+  };
+
+  const handleDeleteTask = (taskId: number) => {
+    if (confirm('Are you sure you want to delete this task?')) {
+      deleteTaskMutation.mutate(taskId);
     }
   };
 
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedTasks(filteredAndSortedTasks.map(task => task.id));
-    } else {
-      setSelectedTasks([]);
-    }
-  };
+  // Task statistics
+  const taskStats = useMemo(() => {
+    if (!tasks) return { total: 0, pending: 0, in_progress: 0, completed: 0, overdue: 0 };
+    
+    const stats = {
+      total: tasks.length,
+      pending: tasks.filter((t: Task) => t.status === 'pending').length,
+      in_progress: tasks.filter((t: Task) => t.status === 'in_progress').length,
+      completed: tasks.filter((t: Task) => t.status === 'completed').length,
+      overdue: tasks.filter((t: Task) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'completed').length
+    };
+    
+    return stats;
+  }, [tasks]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -255,31 +238,23 @@ export default function TasksPage() {
     }
   };
 
-  const isOverdue = (dueDate: string) => {
+  const isOverdue = (dueDate?: string) => {
+    if (!dueDate) return false;
     return new Date(dueDate) < new Date();
   };
 
-  // Task statistics
-  const taskStats = useMemo(() => {
-    return {
-      total: allTasks.length,
-      pending: allTasks.filter(t => t.status === "pending").length,
-      inProgress: allTasks.filter(t => t.status === "in_progress").length,
-      completed: allTasks.filter(t => t.status === "completed").length,
-      overdue: allTasks.filter(t => t.dueDate && isOverdue(t.dueDate) && t.status !== "completed").length,
-    };
-  }, [allTasks]);
-
+  // Loading state
   if (isLoading) {
     return (
       <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+        <VoiceShortcuts page="tasks" />
         <Sidebar className="w-64 border-r" />
         <div className="flex-1 overflow-auto p-6">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
             <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
+              {[...Array(5)].map((_, i) => (
                 <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
               ))}
             </div>
@@ -365,259 +340,169 @@ export default function TasksPage() {
 
           {/* Statistics Cards */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold">{taskStats.total}</div>
-                  <p className="text-xs text-muted-foreground">Total Tasks</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-yellow-600">{taskStats.pending}</div>
-                  <p className="text-xs text-muted-foreground">Pending</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-blue-600">{taskStats.inProgress}</div>
-                  <p className="text-xs text-muted-foreground">In Progress</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-green-600">{taskStats.completed}</div>
-                  <p className="text-xs text-muted-foreground">Completed</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-red-600">{taskStats.overdue}</div>
-                  <p className="text-xs text-muted-foreground">Overdue</p>
-                </CardContent>
-              </Card>
-            </div>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-2xl font-bold">{taskStats.total}</div>
+                <p className="text-xs text-muted-foreground">Total Tasks</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-2xl font-bold text-yellow-600">{taskStats.pending}</div>
+                <p className="text-xs text-muted-foreground">Pending</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-2xl font-bold text-blue-600">{taskStats.in_progress}</div>
+                <p className="text-xs text-muted-foreground">In Progress</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-2xl font-bold text-green-600">{taskStats.completed}</div>
+                <p className="text-xs text-muted-foreground">Completed</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-2xl font-bold text-red-600">{taskStats.overdue}</div>
+                <p className="text-xs text-muted-foreground">Overdue</p>
+              </CardContent>
+            </Card>
+          </div>
 
-            {/* Filters and Search */}
-            <div className="flex flex-wrap gap-4 mb-6">
-              <div className="relative flex-1 min-w-64">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Search tasks..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Priority</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="createdAt">Created Date</SelectItem>
-                  <SelectItem value="dueDate">Due Date</SelectItem>
-                  <SelectItem value="title">Title</SelectItem>
-                  <SelectItem value="priority">Priority</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-              >
-                <ArrowUpDown className="w-4 h-4" />
-              </Button>
+          {/* Filters and Search */}
+          <div className="flex flex-wrap gap-4 mb-6">
+            <div className="flex-1 min-w-64">
+              <Input
+                placeholder="Search tasks..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full"
+              />
             </div>
-
-            {/* Bulk Actions */}
-            {selectedTasks.length > 0 && (
-              <div className="flex items-center gap-4 mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <span className="text-sm font-medium">
-                  {selectedTasks.length} task{selectedTasks.length > 1 ? 's' : ''} selected
-                </span>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => bulkUpdateMutation.mutate({ ids: selectedTasks, updates: { status: "completed" } })}
-                  >
-                    <CheckCircle2 className="w-4 h-4 mr-1" />
-                    Mark Complete
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => bulkUpdateMutation.mutate({ ids: selectedTasks, updates: { status: "in_progress" } })}
-                  >
-                    <PlayCircle className="w-4 h-4 mr-1" />
-                    Start Progress
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => {
-                      selectedTasks.forEach(id => deleteTaskMutation.mutate(id));
-                      setSelectedTasks([]);
-                    }}
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            )}
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Priority</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="createdAt">Created Date</SelectItem>
+                <SelectItem value="dueDate">Due Date</SelectItem>
+                <SelectItem value="title">Title</SelectItem>
+                <SelectItem value="priority">Priority</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+            >
+              <ArrowUpDown className="w-4 h-4" />
+            </Button>
           </div>
 
           {/* Tasks List */}
           <div className="space-y-4">
             {filteredAndSortedTasks.length === 0 ? (
               <Card>
-                <CardContent className="p-6 text-center">
-                  <Calendar className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    {searchQuery || statusFilter !== "all" || priorityFilter !== "all" 
-                      ? "No tasks match your filters"
-                      : "No tasks yet"
-                    }
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4">
-                    {searchQuery || statusFilter !== "all" || priorityFilter !== "all"
-                      ? "Try adjusting your search or filters."
-                      : "Get started by creating your first task."
-                    }
-                  </p>
-                  {!searchQuery && statusFilter === "all" && priorityFilter === "all" && (
-                    <Button onClick={() => setOpen(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Task
-                    </Button>
-                  )}
+                <CardContent className="p-8 text-center">
+                  <div className="text-muted-foreground mb-4">
+                    {tasks?.length === 0 ? "No tasks yet" : "No tasks match your filters"}
+                  </div>
+                  <Button onClick={() => setOpen(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Your First Task
+                  </Button>
                 </CardContent>
               </Card>
             ) : (
               <>
-                {/* Select All */}
-                <div className="flex items-center gap-3 p-3 border rounded-lg bg-white dark:bg-gray-800">
-                  <Checkbox
-                    checked={selectedTasks.length === filteredAndSortedTasks.length}
-                    onCheckedChange={handleSelectAll}
-                  />
-                  <span className="text-sm font-medium">
-                    Select all ({filteredAndSortedTasks.length} tasks)
-                  </span>
-                </div>
-
-                {/* Task Cards */}
-                {filteredAndSortedTasks.map((task) => (
-                  <Card key={task.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader>
-                      <div className="flex items-start gap-3">
-                        <Checkbox
-                          checked={selectedTasks.includes(task.id)}
-                          onCheckedChange={(checked) => handleSelectTask(task.id, checked as boolean)}
-                        />
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <CardTitle className="text-lg flex items-center gap-2">
+                {filteredAndSortedTasks.map((task: Task) => (
+                  <Card key={task.id} className={`${isOverdue(task.dueDate) ? 'border-red-200 dark:border-red-800' : ''}`}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start space-x-4 flex-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleStatusChange(task.id, task.status === 'completed' ? 'pending' : 'completed')}
+                          >
+                            {task.status === 'completed' ? (
+                              <CheckCircle2 className="w-5 h-5 text-green-600" />
+                            ) : (
+                              <Circle className="w-5 h-5" />
+                            )}
+                          </Button>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className={`font-medium ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
                                 {task.title}
-                                {task.dueDate && isOverdue(task.dueDate) && task.status !== "completed" && (
-                                  <AlertTriangle className="w-4 h-4 text-red-500" />
-                                )}
-                              </CardTitle>
-                              {task.description && (
-                                <CardDescription className="mt-1">
-                                  {task.description}
-                                </CardDescription>
-                              )}
-                            </div>
-                            <div className="flex gap-2 ml-4">
+                              </h3>
                               <Badge variant={getPriorityColor(task.priority)}>
                                 {task.priority}
                               </Badge>
                               <Badge variant={getStatusColor(task.status)}>
                                 {task.status.replace('_', ' ')}
                               </Badge>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm">
-                                    <MoreHorizontal className="w-4 h-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => setEditingTask(task)}>
-                                    <Edit className="w-4 h-4 mr-2" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  {task.status !== "completed" && (
-                                    <DropdownMenuItem 
-                                      onClick={() => updateTaskMutation.mutate({ id: task.id, updates: { status: "completed" } })}
-                                    >
-                                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                                      Mark Complete
-                                    </DropdownMenuItem>
-                                  )}
-                                  {task.status === "pending" && (
-                                    <DropdownMenuItem 
-                                      onClick={() => updateTaskMutation.mutate({ id: task.id, updates: { status: "in_progress" } })}
-                                    >
-                                      <PlayCircle className="w-4 h-4 mr-2" />
-                                      Start Progress
-                                    </DropdownMenuItem>
-                                  )}
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem 
-                                    onClick={() => deleteTaskMutation.mutate(task.id)}
-                                    className="text-red-600"
-                                  >
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              {isOverdue(task.dueDate) && task.status !== 'completed' && (
+                                <Badge variant="destructive">Overdue</Badge>
+                              )}
+                            </div>
+                            {task.description && (
+                              <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
+                            )}
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                              {task.dueDate && (
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  Due: {new Date(task.dueDate).toLocaleDateString()}
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                Created: {new Date(task.createdAt).toLocaleDateString()}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-300">
-                        <div className="flex items-center gap-4">
-                          {task.dueDate && (
-                            <div className={`flex items-center gap-1 ${
-                              isOverdue(task.dueDate) && task.status !== "completed" 
-                                ? "text-red-600 font-medium" 
-                                : ""
-                            }`}>
-                              <Clock className="w-4 h-4" />
-                              Due: {new Date(task.dueDate).toLocaleDateString()}
-                            </div>
-                          )}
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            Created: {new Date(task.createdAt).toLocaleDateString()}
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingTask(task)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteTask(task.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
                     </CardContent>

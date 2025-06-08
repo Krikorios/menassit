@@ -123,18 +123,63 @@ export default function FinancesPage() {
                   Add Record
                 </Button>
               </DialogTrigger>
-            </Dialog>
-          </PageHeader>
-
-          <Dialog open={open} onOpenChange={setOpen}>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Add Financial Record</DialogTitle>
                   <DialogDescription>
-                    Add a new income or expense record.
+                    Record a new income or expense transaction.
                   </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleCreateRecord} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="amount">Amount</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      step="0.01"
+                      value={formData.amount}
+                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="type">Type</Label>
+                    <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="income">Income</SelectItem>
+                        <SelectItem value="expense">Expense</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Input
+                      id="category"
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    />
+                  </div>
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending ? "Adding..." : "Add Record"}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </PageHeader>
+
+          <div className="space-y-6">
                   <div className="space-y-2">
                     <Label htmlFor="type">Type</Label>
                     <Select value={newRecord.type} onValueChange={(value) => setNewRecord({ ...newRecord, type: value, category: "" })}>

@@ -21,7 +21,8 @@ import {
   UserCheck,
   Focus,
   Palette,
-  MessageCircle
+  MessageCircle,
+  Heart
 } from "lucide-react";
 
 interface SidebarProps {

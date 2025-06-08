@@ -28,6 +28,7 @@ import FocusPage from "@/pages/FocusPage";
 import ThemePage from "@/pages/ThemePage";
 import BenchmarkPage from "@/pages/BenchmarkPage";
 import ChatPage from "@/pages/ChatPage";
+import ComfortHubPage from "@/pages/ComfortHubPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -47,6 +48,7 @@ function Router() {
       <Route path="/focus" component={FocusPage} />
       <Route path="/themes" component={ThemePage} />
       <Route path="/chat" component={ChatPage} />
+      <Route path="/comfort" component={ComfortHubPage} />
       <Route path="/settings" component={SettingsPage} />
       <Route path="/professionals" component={ProfessionalDirectory} />
       <Route component={NotFound} />

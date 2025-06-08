@@ -65,6 +65,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(securityMiddleware);
   app.use(compressionMiddleware);
   app.use(requestLoggingMiddleware);
+  app.use(performanceOptimizationService.performanceMiddleware);
   app.use(generalRateLimit);
 
   // Health check endpoint for production monitoring
@@ -125,6 +126,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.warn('Failed to record Arabic performance data:', error);
       res.status(500).json({ error: 'Failed to record performance data' });
+    }
+  });
+
+  // Performance optimization endpoints
+  app.get('/api/admin/performance-health', authMiddleware, requireRole(['admin']), (req, res) => {
+    try {
+      const healthStatus = performanceOptimizationService.getHealthStatus();
+      res.json(healthStatus);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to get performance health status' });
+    }
+  });
+
+  app.get('/api/admin/performance-metrics', authMiddleware, requireRole(['admin']), (req, res) => {
+    try {
+      const timeframe = parseInt(req.query.timeframe as string) || 15;
+      const metrics = performanceOptimizationService.getAverageMetrics(timeframe);
+      const current = performanceOptimizationService.getCurrentMetrics();
+      res.json({ current, average: metrics });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to get performance metrics' });
+    }
+  });
+
+  app.post('/api/admin/optimize-memory', authMiddleware, requireRole(['admin']), (req, res) => {
+    try {
+      performanceOptimizationService.optimizeMemoryUsage();
+      res.json({ status: 'Memory optimization completed' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to optimize memory' });
     }
   });
 

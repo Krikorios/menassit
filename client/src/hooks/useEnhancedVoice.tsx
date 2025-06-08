@@ -37,7 +37,6 @@ export function useEnhancedVoice() {
   const { toast } = useToast();
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const commandQueueRef = useRef<string[]>([]);
   
   const [settings, setSettings] = useState<VoiceSettings>({
@@ -107,7 +106,7 @@ export function useEnhancedVoice() {
         if (result.isFinal) {
           finalTranscript += transcript;
           if (alternative.confidence >= settings.confidenceThreshold) {
-            processVoiceCommand(transcript, result[0].confidence);
+            processVoiceCommand(transcript, alternative.confidence);
           }
         } else {
           interimTranscript += transcript;

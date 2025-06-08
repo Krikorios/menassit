@@ -13,6 +13,7 @@ export const generalRateLimit = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  trustProxy: false, // Disable trust proxy to fix configuration error
   skip: (req) => {
     // Skip rate limiting for static assets and development
     return req.path.includes('/src/') || req.path.includes('/@') || 

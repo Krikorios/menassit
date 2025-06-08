@@ -6,13 +6,19 @@ import type { Request, Response, NextFunction } from 'express';
 // Rate limiting configurations
 export const generalRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per window
+  max: 1000, // 1000 requests per window (increased for development)
   message: {
     error: 'Too many requests from this IP, please try again later.',
     retryAfter: '15 minutes'
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for static assets and development
+    return req.path.includes('/src/') || req.path.includes('/@') || 
+           req.path.includes('.js') || req.path.includes('.css') ||
+           process.env.NODE_ENV === 'development';
+  }
 });
 
 export const authRateLimit = rateLimit({

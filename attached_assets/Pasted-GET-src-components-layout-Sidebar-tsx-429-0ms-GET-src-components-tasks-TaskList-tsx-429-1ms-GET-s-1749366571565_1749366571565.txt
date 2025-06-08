@@ -1,0 +1,47 @@
+GET /src/components/layout/Sidebar.tsx 429 0ms
+GET /src/components/tasks/TaskList.tsx 429 1ms
+GET /src/components/voice/VoiceRecorder.tsx 429 1ms
+GET /src/components/financial/FinancialOverview.tsx 429 0ms
+GET /src/components/ui/input.tsx 429 0ms
+GET /src/components/ui/label.tsx 429 0ms
+GET /src/components/ui/alert.tsx 429 1ms
+GET /src/components/ui/checkbox.tsx 429 1ms
+GET /src/components/ui/select.tsx 429 1ms
+GET /src/components/ui/tabs.tsx 429 1ms
+GET /src/components/ui/avatar.tsx 429 0ms
+GET /src/components/ui/dialog.tsx 429 1ms
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+GET /src/components/ui/textarea.tsx 429 0ms
+GET /src/components/ui/separator.tsx 429 0ms
+GET /src/components/ui/switch.tsx 429 0ms
+GET /src/components/ui/progress.tsx 429 1ms
+GET /src/components/voice/VoiceShortcuts.tsx 429 0ms
+GET /src/components/ui/dropdown-menu.tsx 429 0ms
+GET /src/components/ui/button.tsx 429 0ms
+GET /src/services/authService.ts 429 0ms
+GET /src/hooks/useVoice.ts 429 2ms
+GET /src/components/ui/badge.tsx 429 1ms
+GET /src/components/ui/card.tsx 429 1ms
+GET /src/components/ui/input.tsx 429 0ms
+GET /src/components/ui/alert.tsx 429 0ms
+GET /src/components/ui/label.tsx 429 0ms
+GET /src/components/ui/checkbox.tsx 429 1ms
+GET /src/components/ui/select.tsx 429 1ms
+GET /src/components/ui/tabs.tsx 429 0ms
+GET /src/components/ui/dialog.tsx 429 1ms
+GET /src/components/ui/textarea.tsx 429 1ms
+GET /src/components/ui/avatar.tsx 429 0ms
+GET /src/components/ui/separator.tsx 429 1ms
+GET /src/components/voice/VoiceShortcuts.tsx 429 0ms
+GET /src/components/ui/dropdown-menu.tsx 429 0ms
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)

@@ -9,8 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/ui/page-header';
+import { FinancialSkeleton, CardSkeleton, ChartSkeleton } from '@/components/ui/loading-skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
 import Sidebar from '@/components/layout/Sidebar';
 import { Plus, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 
@@ -99,13 +99,42 @@ export default function FinancesPage() {
       <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
         <Sidebar className="w-64 border-r" />
         <div className="flex-1 overflow-auto p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-            <div className="grid grid-cols-3 gap-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="space-y-6">
+            <PageHeader
+              title="Financial Overview"
+              description="Track your income and expenses"
+            />
+            
+            {/* Summary cards skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <CardSkeleton key={i} />
               ))}
+            </div>
+            
+            {/* Chart skeleton */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Spending Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartSkeleton />
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Transactions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <FinancialSkeleton key={i} />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>

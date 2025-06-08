@@ -83,6 +83,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(performanceOptimizationService.performanceMiddleware);
   app.use(generalRateLimit);
 
+  // Admin setup endpoint (one-time use)
+  app.post('/api/admin/setup', async (req: Request, res: Response) => {
+    try {
+      // Check if any admin users already exist
+      const existingAdmin = await storage.getUserByEmail('admin@menassist.com');
+      if (existingAdmin) {
+        return res.status(400).json({ error: 'Admin already exists' });
+      }
+
+      const hashedPassword = await bcryptjs.hash('MenAssist2025!', 10);
+      const adminUser = await storage.createUser({
+        username: 'admin',
+        email: 'admin@menassist.com',
+        password: hashedPassword,
+        role: 'admin',
+        firstName: 'Admin',
+        lastName: 'User',
+        onboardingComplete: true,
+        voiceEnabled: true,
+        notificationsEnabled: true
+      });
+
+      res.json({ 
+        message: 'Admin user created successfully',
+        credentials: {
+          email: 'admin@menassist.com',
+          password: 'MenAssist2025!'
+        }
+      });
+    } catch (error) {
+      console.error('Admin setup error:', error);
+      res.status(500).json({ error: 'Failed to create admin user' });
+    }
+  });
+
   // Health check endpoint for production monitoring
   app.get('/health', async (req, res) => {
     const health = await monitoringService.getHealthCheck();

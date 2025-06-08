@@ -485,7 +485,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(professionalServices.isActive, true));
 
     if (type) {
-      query = query.where(eq(professionalServices.type, type));
+      query = query.where(eq(professionalServices.serviceType, type));
     }
     
     if (location) {
@@ -499,7 +499,7 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db
       .update(professionalServices)
       .set({ ...updates, updatedAt: new Date() })
-      .where(and(eq(professionalServices.id, id), eq(professionalServices.providerId, userId)))
+      .where(and(eq(professionalServices.id, id), eq(professionalServices.userId, userId)))
       .returning();
     return updated || undefined;
   }

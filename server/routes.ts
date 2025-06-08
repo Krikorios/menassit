@@ -318,6 +318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       res.json(services);
     } catch (error) {
+      console.error('Professional services error:', error);
       res.status(500).json({ error: 'Failed to fetch professional services' });
     }
   });

@@ -32,6 +32,11 @@ export default function DashboardPage() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { isListening, speak } = useVoiceContext();
   const { unreadCount } = useNotifications();
+  const { startTour } = useTourManager();
+
+  const handleStartTour = () => {
+    startTour("main", getMainTourSteps());
+  };
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -92,6 +97,15 @@ export default function DashboardPage() {
                 </p>
               </div>
               <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleStartTour}
+                  className="flex items-center space-x-1 text-xs"
+                >
+                  <HelpCircle className="w-3 h-3" />
+                  <span>Take Tour</span>
+                </Button>
                 <Badge variant="secondary" className="text-xs">
                   {user.role === "admin" ? "Admin" : user.role === "pro" ? "Pro" : "Standard"} User
                 </Badge>

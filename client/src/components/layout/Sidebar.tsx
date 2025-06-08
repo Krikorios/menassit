@@ -121,7 +121,7 @@ export default function Sidebar({ className }: SidebarProps) {
   };
 
   return (
-    <div className={cn("pb-12 min-h-screen", className)}>
+    <div className={cn("pb-12 min-h-screen", className)} data-tour="navigation">
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
           <div className="space-y-1">
@@ -134,6 +134,7 @@ export default function Sidebar({ className }: SidebarProps) {
                   <Button
                     variant={isActive(item.href) ? "secondary" : "ghost"}
                     className="w-full justify-start"
+                    data-tour={item.href === "/dashboard" ? "dashboard" : item.href === "/tasks" ? "tasks" : item.href === "/finances" ? "finances" : item.href === "/voice" ? "voice" : item.href === "/ai" ? "ai" : undefined}
                   >
                     <item.icon className="mr-2 h-4 w-4" />
                     {item.name}

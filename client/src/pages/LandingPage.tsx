@@ -1,6 +1,5 @@
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import { useVoice } from "@/hooks/useVoice";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import DailyJoke from "@/components/ai/DailyJoke";
@@ -9,7 +8,6 @@ import Header from "@/components/layout/Header";
 
 import { 
   Mic, 
-  Volume2, 
   Brain, 
   DollarSign, 
   Calendar,
@@ -17,26 +15,35 @@ import {
 } from "lucide-react";
 
 export default function LandingPage() {
+  console.log("🚀 LandingPage is rendering...");
   const [, setLocation] = useLocation();
   const { user } = useAuth();
-  const { isListening, startListening, stopListening, isSupported } = useVoice();
+  // Temporarily removed voice hooks that might be causing issues
+  // const { isListening, startListening, stopListening, isSupported } = useVoice();
+
+  // Log auth state for debugging
+  console.log("👤 User authentication state:", user);
 
   // Redirect to dashboard if already authenticated
   if (user) {
+    console.log("👤 User authenticated, redirecting to dashboard...");
     setLocation("/dashboard");
     return null;
   }
 
   const handleGetStarted = () => {
+    console.log("🔘 Get Started button clicked");
     setLocation("/login");
   };
 
   const handleVoiceDemo = () => {
-    if (isListening) {
-      stopListening();
-    } else {
-      startListening();
-    }
+    console.log("🔘 Voice Demo button clicked");
+    // Voice functionality temporarily disabled for debugging
+    // if (isListening) {
+    //   stopListening();
+    // } else {
+    //   startListening();
+    // }
   };
 
   return (
@@ -78,26 +85,15 @@ export default function LandingPage() {
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
               
-              {isSupported && (
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={handleVoiceDemo}
-                  className="border-2 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-8 py-3 text-lg font-semibold rounded-xl transition-all"
-                >
-                  {isListening ? (
-                    <>
-                      <Volume2 className="w-5 h-5 mr-2 animate-pulse" />
-                      Listening...
-                    </>
-                  ) : (
-                    <>
-                      <Mic className="w-5 h-5 mr-2" />
-                      Try Voice Demo
-                    </>
-                  )}
-                </Button>
-              )}
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={handleVoiceDemo}
+                className="border-2 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-8 py-3 text-lg font-semibold rounded-xl transition-all"
+              >
+                <Mic className="w-5 h-5 mr-2" />
+                Try Voice Demo
+              </Button>
             </div>
 
             {/* Features Grid */}
@@ -143,15 +139,9 @@ export default function LandingPage() {
                 <p className="text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
                   Control your productivity suite with natural voice commands. Create tasks, check finances, and navigate the app hands-free.
                 </p>
-                {isSupported ? (
-                  <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-                    ✓ Voice control supported on your device
-                  </p>
-                ) : (
-                  <p className="text-sm text-orange-600 dark:text-orange-400">
-                    Voice control requires a modern browser with microphone access
-                  </p>
-                )}
+                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                  ✓ Voice control supported on your device
+                </p>
               </div>
             </div>
           </div>

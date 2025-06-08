@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from "react";
-import { useVoiceContext } from "@/context/VoiceProvider";
+// Removed circular dependency import
+// import { useVoiceContext } from "@/context/VoiceProvider";
 
 export function useVoice() {
   const [isListening, setIsListening] = useState(false);

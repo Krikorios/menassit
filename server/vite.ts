@@ -23,10 +23,12 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
+  log("🔧 Setting up Vite development server...");
+  
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
-    allowedHosts: true,
+    allowedHosts: true as true,
   };
 
   const vite = await createViteServer({
@@ -43,9 +45,12 @@ export async function setupVite(app: Express, server: Server) {
     appType: "custom",
   });
 
+  log("✅ Vite server created, adding middleware...");
   app.use(vite.middlewares);
+  log("✅ Vite middleware added");
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
+    log(`🌐 Handling request for: ${url}`);
 
     try {
       const clientTemplate = path.resolve(
@@ -55,15 +60,19 @@ export async function setupVite(app: Express, server: Server) {
         "index.html",
       );
 
+      log(`📄 Reading template from: ${clientTemplate}`);
       // always reload the index.html file from disk incase it changes
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
       template = template.replace(
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`,
       );
+      log(`🔄 Transforming HTML with Vite...`);
       const page = await vite.transformIndexHtml(url, template);
+      log(`✅ Sending transformed HTML`);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
+      log(`❌ Error processing request: ${e}`);
       vite.ssrFixStacktrace(e as Error);
       next(e);
     }

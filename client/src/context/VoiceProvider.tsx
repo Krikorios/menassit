@@ -20,6 +20,14 @@ interface VoiceContextType {
 
 const VoiceContext = createContext<VoiceContextType | undefined>(undefined);
 
+export function useVoiceContext() {
+  const context = useContext(VoiceContext);
+  if (context === undefined) {
+    throw new Error("useVoiceContext must be used within a VoiceProvider");
+  }
+  return context;
+}
+
 export function VoiceProvider({ children }: { children: React.ReactNode }) {
   const { isListening, startListening, stopListening, isSupported } = useVoice();
   const [language, setLanguage] = useState<'en' | 'ar'>('en');

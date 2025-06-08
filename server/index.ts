@@ -3,6 +3,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { taskScheduler } from "./services/taskScheduler";
 import { setupVite, serveStatic, log } from "./vite";
+import session from 'express-session';
+import passport from 'passport';
 
 const app = express();
 app.set('trust proxy', true);
@@ -23,6 +25,22 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Session middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'default_secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: app.get('env') === 'production',
+    maxAge: 1000 * 60 * 60 * 24, // 1 day
+  },
+}));
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use((req, res, next) => {
   const start = Date.now();

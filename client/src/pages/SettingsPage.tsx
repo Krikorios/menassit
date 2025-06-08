@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { PageHeader } from "@/components/ui/page-header";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/Sidebar";
 import { User, Bell, Shield, Palette, Moon, Sun, Globe, Download, Trash2 } from "lucide-react";
@@ -58,12 +59,10 @@ export default function SettingsPage() {
       <Sidebar className="w-64 border-r" />
       <div className="flex-1 overflow-auto">
         <div className="p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
-            <p className="text-gray-600 dark:text-gray-300">
-              Manage your account settings and preferences
-            </p>
-          </div>
+          <PageHeader
+            title="Settings"
+            description="Manage your account settings and preferences"
+          />
 
           <Tabs defaultValue="profile" className="space-y-6">
             <TabsList>

@@ -102,12 +102,10 @@ export default function AIPage() {
       <Sidebar className="w-64 border-r" />
       <div className="flex-1 overflow-auto">
         <div className="p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">AI Assistant</h1>
-            <p className="text-gray-600 dark:text-gray-300">
-              Chat with your AI assistant and get personalized insights
-            </p>
-          </div>
+          <PageHeader
+            title="AI Assistant"
+            description="Chat with your AI assistant and get personalized insights"
+          />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Chat Interface */}

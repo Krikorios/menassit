@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 import { useTranslation } from "react-i18next";
 import { Timer, Brain, Volume2, Shield, Target, Coffee, Zap } from "lucide-react";
 import Header from "@/components/layout/Header";
@@ -17,10 +18,10 @@ export default function FocusPage() {
       <div className="flex-1 flex flex-col">
         <Header />
         <div className="flex-1 p-6 overflow-auto">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Focus Zone</h1>
-            <p className="text-gray-600 dark:text-gray-400">Maximize your productivity with focused work sessions</p>
-          </div>
+          <PageHeader
+            title="Focus Zone"
+            description="Maximize your productivity with focused work sessions"
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <Card>

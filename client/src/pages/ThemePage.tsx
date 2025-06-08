@@ -1,5 +1,6 @@
 import { ThemeControlPanel } from "@/components/ThemeControlPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
 import { useTranslation } from "react-i18next";
 import { Palette, Sparkles, Clock, Brain } from "lucide-react";
 
@@ -8,14 +9,10 @@ export default function ThemePage() {
 
   return (
     <div className="container mx-auto py-8 space-y-8">
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-          {t('theme.title', 'Adaptive Theme System')}
-        </h1>
-        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-          {t('theme.description', 'Experience a dynamic interface that adapts to your mood, activity patterns, and time of day for optimal productivity and comfort.')}
-        </p>
-      </div>
+      <PageHeader
+        title={t('theme.title', 'Adaptive Theme System')}
+        description={t('theme.description', 'Experience a dynamic interface that adapts to your mood, activity patterns, and time of day for optimal productivity and comfort.')}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Card>

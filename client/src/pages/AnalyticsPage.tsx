@@ -91,10 +91,10 @@ export default function AnalyticsPage() {
       <div className="flex-1 flex flex-col">
         <Header />
         <div className="flex-1 p-6 overflow-auto">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h1>
-            <p className="text-gray-600 dark:text-gray-400">Comprehensive insights and performance metrics</p>
-          </div>
+          <PageHeader
+            title="Analytics Dashboard"
+            description="Comprehensive insights and performance metrics"
+          />
 
           <Tabs defaultValue="realtime" className="space-y-6">
             <TabsList className="grid w-full grid-cols-3">

@@ -112,13 +112,10 @@ export default function FinancesPage() {
       <Sidebar className="w-64 border-r" />
       <div className="flex-1 overflow-auto">
         <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Finances</h1>
-              <p className="text-gray-600 dark:text-gray-300">
-                Track your income, expenses, and financial goals
-              </p>
-            </div>
+          <PageHeader
+            title="Finances"
+            description="Track your income, expenses, and financial goals"
+          >
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Button>
@@ -126,6 +123,10 @@ export default function FinancesPage() {
                   Add Record
                 </Button>
               </DialogTrigger>
+            </Dialog>
+          </PageHeader>
+
+          <Dialog open={open} onOpenChange={setOpen}>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Add Financial Record</DialogTitle>

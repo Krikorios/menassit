@@ -18,14 +18,17 @@ export default function AIPage() {
 
   const { data: dailyJoke } = useQuery({
     queryKey: ["/api/ai/daily-joke"],
+    select: (data: any) => data || { joke: "Why don't AI assistants ever get tired? Because they run on endless loops!" }
   });
 
   const { data: status } = useQuery({
     queryKey: ["/api/ai/status"],
+    select: (data: any) => data || { loaded: true }
   });
 
   const { data: interactions = [] } = useQuery({
     queryKey: ["/api/ai/interactions"],
+    select: (data: any) => Array.isArray(data) ? data : []
   });
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -60,12 +63,11 @@ export default function AIPage() {
 
   const generatePersonalizedJoke = async () => {
     try {
-      const response = await apiRequest("/api/ai/joke", {
-        method: "POST",
-      });
+      const response = await apiRequest("POST", "/api/ai/generate-joke", {});
+      const data = await response.json();
       toast({
         title: "Here's a joke for you!",
-        description: response.content || "Why don't tasks ever get lonely? Because they always have deadlines to meet!",
+        description: data.content || "Why don't tasks ever get lonely? Because they always have deadlines to meet!",
       });
     } catch (error) {
       toast({
@@ -78,13 +80,13 @@ export default function AIPage() {
 
   const generateInsight = async (type: string) => {
     try {
-      const response = await apiRequest("/api/ai/insight", {
-        method: "POST",
-        body: JSON.stringify({ type }),
+      const response = await apiRequest("POST", "/api/ai/chat", { 
+        message: `Generate an insight about my ${type} data` 
       });
+      const data = await response.json();
       toast({
         title: `${type.charAt(0).toUpperCase() + type.slice(1)} Insight`,
-        description: response.content || "Here's an insight based on your data!",
+        description: data.content || "Here's an insight based on your data!",
       });
     } catch (error) {
       toast({
@@ -183,14 +185,14 @@ export default function AIPage() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Model Status</span>
-                      <Badge variant={status?.loaded ? "default" : "secondary"}>
-                        {status?.loaded ? "Ready" : "Loading"}
+                      <Badge variant={(status as any)?.loaded ? "default" : "secondary"}>
+                        {(status as any)?.loaded ? "Ready" : "Loading"}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Interactions Today</span>
                       <Badge variant="outline">
-                        {interactions.length}
+                        {Array.isArray(interactions) ? interactions.length : 0}
                       </Badge>
                     </div>
                   </div>
@@ -235,24 +237,24 @@ export default function AIPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm italic">"{dailyJoke.joke}"</p>
+                    <p className="text-sm italic">"{(dailyJoke as any)?.joke || 'Why don\'t AI assistants ever get tired? Because they run on endless loops!'}"</p>
                   </CardContent>
                 </Card>
               )}
 
               {/* Recent Interactions */}
-              {interactions.length > 0 && (
+              {Array.isArray(interactions) && interactions.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Recent Interactions</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {interactions.slice(0, 5).map((interaction: any) => (
-                        <div key={interaction.id} className="text-xs p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                          <div className="font-medium">{interaction.type}</div>
+                      {(interactions as any[]).slice(0, 5).map((interaction: any, index: number) => (
+                        <div key={interaction.id || index} className="text-xs p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                          <div className="font-medium">{interaction.type || 'AI Interaction'}</div>
                           <div className="text-gray-600 dark:text-gray-300">
-                            {new Date(interaction.createdAt).toLocaleDateString()}
+                            {interaction.createdAt ? new Date(interaction.createdAt).toLocaleDateString() : 'Today'}
                           </div>
                         </div>
                       ))}

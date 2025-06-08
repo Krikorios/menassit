@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-export default function Header() {
+export function Header() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { t } = useTranslation();
@@ -160,3 +160,5 @@ export default function Header() {
     </header>
   );
 }
+
+export default Header;

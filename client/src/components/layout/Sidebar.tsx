@@ -233,3 +233,5 @@ export default function Sidebar({ className }: SidebarProps) {
     </div>
   );
 }
+
+export default Sidebar;

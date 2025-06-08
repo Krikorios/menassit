@@ -184,6 +184,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Apply error tracking middleware at the end
+  app.use(errorTrackingMiddleware);
+
   const httpServer = createServer(app);
   return httpServer;
 }

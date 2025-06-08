@@ -18,6 +18,7 @@ import FinancesPage from "@/pages/FinancesPage";
 import VoicePage from "@/pages/VoicePage";
 import AIPage from "@/pages/AIPage";
 import AnalyticsPage from "@/pages/AnalyticsPage";
+import SystemMonitoringPage from "@/pages/SystemMonitoringPage";
 import SettingsPage from "@/pages/SettingsPage";
 import NotFound from "@/pages/not-found";
 
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/voice" component={VoicePage} />
       <Route path="/ai" component={AIPage} />
       <Route path="/analytics" component={AnalyticsPage} />
+      <Route path="/monitoring" component={SystemMonitoringPage} />
       <Route path="/settings" component={SettingsPage} />
       <Route path="/professionals" component={ProfessionalDirectory} />
       <Route component={NotFound} />

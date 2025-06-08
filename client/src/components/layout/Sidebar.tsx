@@ -15,7 +15,8 @@ import {
   Users,
   BarChart3,
   Shield,
-  Zap
+  Zap,
+  Monitor
 } from "lucide-react";
 
 interface SidebarProps {
@@ -56,6 +57,12 @@ const managementNavigation = [
     name: "Analytics",
     href: "/analytics",
     icon: BarChart3,
+    roles: ["pro", "admin"],
+  },
+  {
+    name: "System Monitor",
+    href: "/monitoring",
+    icon: Monitor,
     roles: ["pro", "admin"],
   },
   {

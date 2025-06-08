@@ -84,7 +84,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     cookie: {
       secure: false, // Set to true in production with HTTPS
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'lax' // Allow cross-origin requests for development
     }
   }));
 
@@ -357,19 +358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Configure session middleware
-  app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
-  }));
 
-  app.use(passport.initialize());
-  app.use(passport.session());
 
   // Authentication routes (with rate limiting)
   app.post('/api/auth/register', authRateLimit, authController.register);

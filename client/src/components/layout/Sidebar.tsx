@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,57 +17,63 @@ import {
   BarChart3,
   Shield,
   Zap,
-  Monitor
+  Monitor,
+  UserCheck
 } from "lucide-react";
 
 interface SidebarProps {
   className?: string;
 }
 
-const navigation = [
+const getNavigation = (t: any) => [
   {
-    name: "Dashboard",
+    name: t('navigation.dashboard'),
     href: "/dashboard",
     icon: LayoutDashboard,
   },
   {
-    name: "Tasks",
+    name: t('navigation.tasks'),
     href: "/tasks",
     icon: Calendar,
     badge: "3", // This would come from task count
   },
   {
-    name: "Finances",
+    name: t('navigation.finances'),
     href: "/finances", 
     icon: DollarSign,
   },
   {
-    name: "Voice Commands",
+    name: t('navigation.professionals'),
+    href: "/professionals",
+    icon: UserCheck,
+  },
+  {
+    name: t('navigation.voice'),
     href: "/voice",
     icon: Mic,
   },
   {
-    name: "AI Assistant",
+    name: t('navigation.ai'),
     href: "/ai",
     icon: Brain,
   },
 ];
 
-const managementNavigation = [
+const getManagementNavigation = (t: any) => [
   {
-    name: "Analytics",
+    name: t('navigation.analytics'),
     href: "/analytics",
     icon: BarChart3,
     roles: ["pro", "admin"],
   },
   {
-    name: "System Monitor",
+    name: t('navigation.monitoring'),
     href: "/monitoring",
     icon: Monitor,
     roles: ["pro", "admin"],
   },
   {
-    name: "Settings",
+    name: t('navigation.settings'),
     href: "/settings",
     icon: Settings,
   },

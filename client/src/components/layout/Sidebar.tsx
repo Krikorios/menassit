@@ -77,6 +77,12 @@ const getNavigation = (t: any) => [
     href: "/themes",
     icon: Palette,
   },
+  {
+    name: t('navigation.comfort', 'Comfort Hub'),
+    href: "/comfort",
+    icon: Heart,
+    badge: "NEW", // Highlight this new feature
+  },
 ];
 
 const getManagementNavigation = (t: any) => [

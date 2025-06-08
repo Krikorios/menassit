@@ -356,7 +356,7 @@ const ComfortHubPage = () => {
                   y: Math.random() * window.innerHeight
                 }}
                 animate={{
-                  y: [null, -20, null],
+                  y: [-20, 0, -20],
                   opacity: [0.4, 0.8, 0.4]
                 }}
                 transition={{
@@ -371,21 +371,23 @@ const ComfortHubPage = () => {
       </AnimatePresence>
 
       {/* Global CSS for experience mode */}
-      <style jsx global>{`
-        .experience-mode {
-          background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
-          transition: background 1s ease;
-        }
-        
-        .experience-mode .bg-white {
-          background: rgba(255, 255, 255, 0.05) !important;
-          backdrop-filter: blur(10px);
-        }
-        
-        .experience-mode .dark\\:bg-gray-800 {
-          background: rgba(30, 30, 60, 0.8) !important;
-        }
-      `}</style>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .experience-mode {
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            transition: background 1s ease;
+          }
+          
+          .experience-mode .bg-white {
+            background: rgba(255, 255, 255, 0.05) !important;
+            backdrop-filter: blur(10px);
+          }
+          
+          .experience-mode .dark\\:bg-gray-800 {
+            background: rgba(30, 30, 60, 0.8) !important;
+          }
+        `
+      }} />
     </div>
   );
 };

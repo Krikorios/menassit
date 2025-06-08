@@ -6,9 +6,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { FloatingVoiceControl } from "@/components/voice/FloatingVoiceControl";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AdaptiveThemeProvider } from "@/context/AdaptiveThemeContext";
 import { VoiceProvider } from "@/context/VoiceProvider";
 import { NotificationProvider } from "@/context/NotificationProvider";
 import { TourManagerProvider } from "@/components/onboarding/TourManager";
+import { MoodDetector } from "@/components/MoodDetector";
 import LandingPage from "@/pages/LandingPage";
 import DashboardPage from "@/pages/DashboardPage";
 import LoginPage from "@/pages/LoginPage";
@@ -51,17 +53,20 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <NotificationProvider>
-            <VoiceProvider>
-              <TourManagerProvider>
-                <TooltipProvider>
-                  <Toaster />
-                  <Router />
-                  <FloatingVoiceControl />
-                </TooltipProvider>
-              </TourManagerProvider>
-            </VoiceProvider>
-          </NotificationProvider>
+          <AdaptiveThemeProvider>
+            <NotificationProvider>
+              <VoiceProvider>
+                <TourManagerProvider>
+                  <TooltipProvider>
+                    <Toaster />
+                    <Router />
+                    <FloatingVoiceControl />
+                    <MoodDetector />
+                  </TooltipProvider>
+                </TourManagerProvider>
+              </VoiceProvider>
+            </NotificationProvider>
+          </AdaptiveThemeProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

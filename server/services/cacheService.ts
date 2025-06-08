@@ -16,19 +16,27 @@ class CacheService {
 
   private async initializeRedis() {
     try {
-      // Try to connect to Redis if available
-      const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+      const redisUrl = process.env.REDIS_URL;
+      if (!redisUrl) {
+        this.redis = null;
+        this.isRedisConnected = false;
+        return;
+      }
+
       this.redis = new Redis(redisUrl, {
-        retryDelayOnFailover: 100,
-        maxRetriesPerRequest: 3,
-        lazyConnect: true
+        maxRetriesPerRequest: 0,
+        lazyConnect: true,
+        enableOfflineQueue: false,
+        connectTimeout: 2000
+      });
+
+      this.redis.on('error', () => {
+        this.isRedisConnected = false;
       });
 
       await this.redis.ping();
       this.isRedisConnected = true;
-      console.log('Redis cache connected');
     } catch (error) {
-      console.log('Redis not available, using memory cache');
       this.redis = null;
       this.isRedisConnected = false;
     }

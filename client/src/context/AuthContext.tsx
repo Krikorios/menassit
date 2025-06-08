@@ -27,10 +27,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuthStatus = async () => {
     try {
-      const currentUser = await authService.getCurrentUser();
-      setUser(currentUser);
+      const response = await fetch('/api/auth/me', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      } else {
+        setUser(null);
+      }
     } catch (error) {
-      // User not authenticated
+      console.warn('Auth check failed:', error);
       setUser(null);
     } finally {
       setIsLoading(false);

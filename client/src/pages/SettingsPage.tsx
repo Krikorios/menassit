@@ -25,7 +25,7 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState({
     username: user?.username || "",
     email: user?.email || "",
-    fullName: user?.fullName || "",
+    fullName: `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || user?.username || "",
   });
   const [notifications, setNotifications] = useState({
     emailNotifications: true,
@@ -91,16 +91,16 @@ export default function SettingsPage() {
             <TabsContent value="profile">
               <Card>
                 <CardHeader>
-                  <CardTitle>Profile Information</CardTitle>
+                  <CardTitle>{t('settings.profile')}</CardTitle>
                   <CardDescription>
-                    Update your personal information and account details.
+                    {t('settings.profileDescription')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleProfileUpdate} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="username">Username</Label>
+                        <Label htmlFor="username">{t('auth.username')}</Label>
                         <Input
                           id="username"
                           value={profile.username}

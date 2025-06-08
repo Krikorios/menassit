@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { Separator } from "@/components/ui/separator";
 import {
   Calendar,
@@ -126,7 +126,7 @@ const adminNavigation = [
   },
 ];
 
-export default function Sidebar({ className }: SidebarProps) {
+function Sidebar({ className }: SidebarProps) {
   const [location] = useLocation();
   const { user } = useAuth();
   const { t } = useTranslation();

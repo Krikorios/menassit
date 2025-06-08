@@ -6,20 +6,22 @@ import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/Sidebar";
-import { Mic, MicOff, Volume2, Settings, PlayCircle, StopCircle } from "lucide-react";
+import { Mic, MicOff, Volume2, Settings, PlayCircle } from "lucide-react";
 import { useVoice } from "@/hooks/useVoice";
 
 export default function VoicePage() {
   const { toast } = useToast();
   const [isListening, setIsListening] = useState(false);
-  const { isEnabled, isSupported, startListening, stopListening } = useVoice();
+  const { isSupported, startListening, stopListening } = useVoice();
 
   const { data: commands = [], isLoading } = useQuery({
     queryKey: ["/api/voice/commands"],
+    select: (data: any) => Array.isArray(data) ? data : []
   });
 
-  const { data: status } = useQuery({
+  useQuery({
     queryKey: ["/api/voice/status"],
+    select: (data: any) => data || { enabled: true }
   });
 
   const handleToggleListening = () => {
@@ -188,7 +190,7 @@ export default function VoicePage() {
           </Card>
 
           {/* Recent Voice Commands */}
-          {!isLoading && commands.length > 0 && (
+          {!isLoading && Array.isArray(commands) && commands.length > 0 && (
             <Card className="mt-6">
               <CardHeader>
                 <CardTitle>Recent Commands</CardTitle>
@@ -198,7 +200,7 @@ export default function VoicePage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {commands.slice(0, 10).map((command: any) => (
+                  {(commands as any[]).slice(0, 10).map((command: any) => (
                     <div key={command.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <div className="font-medium">{command.transcription}</div>

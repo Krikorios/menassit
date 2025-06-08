@@ -3,6 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { FloatingVoiceControl } from "@/components/voice/FloatingVoiceControl";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { VoiceProvider } from "@/context/VoiceProvider";
@@ -50,6 +51,7 @@ function App() {
               <TooltipProvider>
                 <Toaster />
                 <Router />
+                <FloatingVoiceControl />
               </TooltipProvider>
             </VoiceProvider>
           </NotificationProvider>

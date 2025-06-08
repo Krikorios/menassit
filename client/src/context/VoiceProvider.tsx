@@ -373,12 +373,16 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
       value={{
         isListening,
         isSupported,
+        isProcessing,
+        currentTranscript,
         language,
         startListening,
         stopListening,
+        toggleListening,
         setLanguage,
         executeVoiceCommand,
         speak,
+        speakAndExecute,
       }}
     >
       {children}

@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useVoiceIntegration } from "@/hooks/useVoiceIntegration";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ interface Task {
 export default function TasksPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { speak } = useVoiceIntegration();
   const [open, setOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [selectedTasks, setSelectedTasks] = useState<number[]>([]);
@@ -52,6 +54,16 @@ export default function TasksPage() {
   });
 
   const allTasks: Task[] = (tasksResponse as any)?.tasks || [];
+
+  // Voice announcement when page loads
+  useEffect(() => {
+    if (allTasks.length > 0) {
+      const timer = setTimeout(() => {
+        speak(`Tasks page loaded. You have ${allTasks.length} tasks. Say "create task" followed by a task name to add a new task.`);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [allTasks.length, speak]);
 
   // Enhanced filtering and sorting
   const filteredAndSortedTasks = useMemo(() => {
@@ -194,6 +206,7 @@ export default function TasksPage() {
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
     createTaskMutation.mutate(newTask);
+    speak(`Creating task "${newTask.title}"`);
   };
 
   const handleEditTask = (e: React.FormEvent) => {

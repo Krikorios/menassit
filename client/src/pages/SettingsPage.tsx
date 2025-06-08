@@ -108,7 +108,7 @@ export default function SettingsPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
+                        <Label htmlFor="email">{t('auth.email')}</Label>
                         <Input
                           id="email"
                           type="email"
@@ -118,7 +118,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="fullName">Full Name</Label>
+                      <Label htmlFor="fullName">{t('settings.fullName')}</Label>
                       <Input
                         id="fullName"
                         value={profile.fullName}
@@ -126,7 +126,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <Button type="submit" disabled={loading}>
-                      {loading ? "Updating..." : "Update Profile"}
+                      {loading ? t('common.loading') : t('settings.updateProfile')}
                     </Button>
                   </form>
                 </CardContent>
@@ -269,52 +269,52 @@ export default function SettingsPage() {
             <TabsContent value="ai-models">
               <Card>
                 <CardHeader>
-                  <CardTitle>AI Model Management</CardTitle>
+                  <CardTitle>{t('settings.aiModels')}</CardTitle>
                   <CardDescription>
-                    Configure AI models and processing preferences.
+                    {t('settings.aiModelsDescription')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
                     <div>
-                      <Label>AI Response Model</Label>
+                      <Label>{t('settings.aiResponseModel')}</Label>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        Choose the AI model for generating responses
+                        {t('settings.aiResponseModelDesc')}
                       </p>
                       <Select defaultValue="claude-3">
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="claude-3">Claude 3 Sonnet</SelectItem>
-                          <SelectItem value="gpt-4">GPT-4</SelectItem>
-                          <SelectItem value="gemini">Gemini Pro</SelectItem>
+                          <SelectItem value="claude-3">{t('settings.claude3Sonnet')}</SelectItem>
+                          <SelectItem value="gpt-4">{t('settings.gpt4')}</SelectItem>
+                          <SelectItem value="gemini">{t('settings.geminiPro')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     
                     <div>
-                      <Label>Voice Processing</Label>
+                      <Label>{t('settings.voiceProcessing')}</Label>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        Select voice recognition engine
+                        {t('settings.voiceProcessingDesc')}
                       </p>
                       <Select defaultValue="whisper">
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="whisper">OpenAI Whisper</SelectItem>
-                          <SelectItem value="browser">Browser Native</SelectItem>
-                          <SelectItem value="azure">Azure Speech</SelectItem>
+                          <SelectItem value="whisper">{t('settings.whisper')}</SelectItem>
+                          <SelectItem value="browser">{t('settings.browserNative')}</SelectItem>
+                          <SelectItem value="azure">{t('settings.azureSpeech')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label>AI Suggestions</Label>
+                        <Label>{t('settings.aiSuggestions')}</Label>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Enable intelligent task and financial suggestions
+                          {t('settings.aiSuggestionsDesc')}
                         </p>
                       </div>
                       <Switch defaultChecked />
@@ -322,9 +322,9 @@ export default function SettingsPage() {
 
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label>Local Processing</Label>
+                        <Label>{t('settings.localProcessing')}</Label>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Process AI requests locally when possible
+                          {t('settings.localProcessingDesc')}
                         </p>
                       </div>
                       <Switch />
@@ -332,9 +332,9 @@ export default function SettingsPage() {
 
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label>Learning Mode</Label>
+                        <Label>{t('settings.learningMode')}</Label>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Allow AI to learn from your usage patterns
+                          {t('settings.learningModeDesc')}
                         </p>
                       </div>
                       <Switch defaultChecked />

@@ -38,6 +38,78 @@
   --sidebar-ring: 222 84% 5%;
 }
 
+/* Arabic RTL Support */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+[dir="rtl"] .ml-auto {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+[dir="rtl"] .mr-auto {
+  margin-right: 0;
+  margin-left: auto;
+}
+
+[dir="rtl"] .pl-4 {
+  padding-left: 0;
+  padding-right: 1rem;
+}
+
+[dir="rtl"] .pr-4 {
+  padding-right: 0;
+  padding-left: 1rem;
+}
+
+/* Arabic font optimization */
+.arabic-text {
+  font-family: 'Noto Sans Arabic', 'Arial', sans-serif;
+  font-feature-settings: "liga" 1, "calt" 1;
+  text-rendering: optimizeLegibility;
+}
+
+/* Adaptive theme CSS variables for dynamic colors */
+.adaptive-theme-vars {
+  --adaptive-primary: var(--primary);
+  --adaptive-secondary: var(--secondary);
+  --adaptive-accent: var(--accent);
+  --adaptive-background: var(--background);
+  --adaptive-foreground: var(--foreground);
+  --adaptive-muted: var(--muted);
+  --adaptive-muted-foreground: var(--muted-foreground);
+  --adaptive-border: var(--border);
+  --adaptive-card: var(--card);
+  --adaptive-card-foreground: var(--card-foreground);
+}
+
+/* Performance optimizations */
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
 .dark {
   --background: 222 84% 5%;
   --foreground: 210 40% 98%;

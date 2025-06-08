@@ -11,6 +11,7 @@ import { VoiceProvider } from "@/context/VoiceProvider";
 import { NotificationProvider } from "@/context/NotificationProvider";
 import { TourManagerProvider } from "@/components/onboarding/TourManager";
 import { MoodDetector } from "@/components/MoodDetector";
+import { RTLProvider } from "@/components/RTLProvider";
 import LandingPage from "@/pages/LandingPage";
 import DashboardPage from "@/pages/DashboardPage";
 import LoginPage from "@/pages/LoginPage";
@@ -53,24 +54,26 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <AdaptiveThemeProvider>
-            <NotificationProvider>
-              <VoiceProvider>
-                <TourManagerProvider>
-                  <TooltipProvider>
-                    <Toaster />
-                    <Router />
-                    <FloatingVoiceControl />
-                    <MoodDetector />
-                  </TooltipProvider>
-                </TourManagerProvider>
-              </VoiceProvider>
-            </NotificationProvider>
-          </AdaptiveThemeProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <RTLProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <AdaptiveThemeProvider>
+              <NotificationProvider>
+                <VoiceProvider>
+                  <TourManagerProvider>
+                    <TooltipProvider>
+                      <Toaster />
+                      <Router />
+                      <FloatingVoiceControl />
+                      <MoodDetector />
+                    </TooltipProvider>
+                  </TourManagerProvider>
+                </VoiceProvider>
+              </NotificationProvider>
+            </AdaptiveThemeProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </RTLProvider>
     </QueryClientProvider>
   );
 }

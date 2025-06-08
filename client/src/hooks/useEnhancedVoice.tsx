@@ -79,7 +79,7 @@ export function useEnhancedVoice() {
       console.log('Voice recognition ended');
     };
 
-    recognition.onerror = (event) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.error('Voice recognition error:', event.error);
       setIsListening(false);
       if (event.error === 'no-speech') {
@@ -91,17 +91,22 @@ export function useEnhancedVoice() {
       }
     };
 
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       let finalTranscript = '';
       let interimTranscript = '';
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
-        const transcript = result[0].transcript;
+        if (!result) continue;
+        
+        const alternative = result[0];
+        if (!alternative) continue;
+        
+        const transcript = alternative.transcript;
         
         if (result.isFinal) {
           finalTranscript += transcript;
-          if (result[0].confidence >= settings.confidenceThreshold) {
+          if (alternative.confidence >= settings.confidenceThreshold) {
             processVoiceCommand(transcript, result[0].confidence);
           }
         } else {

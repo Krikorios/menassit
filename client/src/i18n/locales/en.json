@@ -19,15 +19,19 @@
     "close": "Close",
     "open": "Open",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "navigation": "Navigation",
+    "management": "Management"
   },
   "navigation": {
     "dashboard": "Dashboard",
     "tasks": "Tasks",
     "finances": "Finances",
+    "professionals": "Professional Directory",
     "ai": "AI Assistant",
-    "voice": "Voice",
+    "voice": "Voice Commands",
     "analytics": "Analytics",
+    "monitoring": "System Monitor",
     "settings": "Settings",
     "logout": "Logout",
     "profile": "Profile"

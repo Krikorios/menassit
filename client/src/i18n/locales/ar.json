@@ -19,17 +19,19 @@
     "close": "إغلاق",
     "open": "فتح",
     "yes": "نعم",
-    "no": "لا"
+    "no": "لا",
+    "navigation": "التنقل",
+    "management": "الإدارة"
   },
   "navigation": {
     "dashboard": "لوحة التحكم",
     "tasks": "المهام",
     "finances": "الماليات",
+    "professionals": "الدليل المهني",
     "ai": "المساعد الذكي",
-    "voice": "الصوت",
+    "voice": "الأوامر الصوتية",
     "analytics": "التحليلات",
     "monitoring": "مراقبة النظام",
-    "professionals": "الدليل المهني",
     "settings": "الإعدادات",
     "logout": "تسجيل الخروج",
     "profile": "الملف الشخصي"

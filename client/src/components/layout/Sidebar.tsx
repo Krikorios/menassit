@@ -103,6 +103,10 @@ const adminNavigation = [
 export default function Sidebar({ className }: SidebarProps) {
   const [location] = useLocation();
   const { user } = useAuth();
+  const { t } = useTranslation();
+
+  const navigation = getNavigation(t);
+  const managementNavigation = getManagementNavigation(t);
 
   const isActive = (href: string) => {
     if (href === "/dashboard") {
@@ -122,7 +126,7 @@ export default function Sidebar({ className }: SidebarProps) {
         <div className="px-3 py-2">
           <div className="space-y-1">
             <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
-              Navigation
+              {t('common.navigation') || 'Navigation'}
             </h2>
             <div className="space-y-1">
               {navigation.map((item) => (
@@ -149,7 +153,7 @@ export default function Sidebar({ className }: SidebarProps) {
 
         <div className="px-3 py-2">
           <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
-            Management
+            {t('common.management') || 'Management'}
           </h2>
           <div className="space-y-1">
             {managementNavigation

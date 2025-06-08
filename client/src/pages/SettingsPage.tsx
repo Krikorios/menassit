@@ -14,7 +14,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { PageHeader } from "@/components/ui/page-header";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/Sidebar";
-import { User, Bell, Shield, Palette, Moon, Sun, Globe, Download, Trash2 } from "lucide-react";
+import { User, Bell, Shield, Palette, Brain } from "lucide-react";
 
 export default function SettingsPage() {
   const { user, updateProfile } = useAuth();
@@ -81,6 +81,10 @@ export default function SettingsPage() {
               <TabsTrigger value="appearance">
                 <Palette className="w-4 h-4 mr-2" />
                 Appearance
+              </TabsTrigger>
+              <TabsTrigger value="ai-models">
+                <Brain className="w-4 h-4 mr-2" />
+                AI Models
               </TabsTrigger>
             </TabsList>
 
@@ -258,6 +262,101 @@ export default function SettingsPage() {
                       <LanguageSwitcher />
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="ai-models">
+              <Card>
+                <CardHeader>
+                  <CardTitle>AI Model Management</CardTitle>
+                  <CardDescription>
+                    Configure AI models and processing preferences.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label>AI Response Model</Label>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        Choose the AI model for generating responses
+                      </p>
+                      <Select defaultValue="claude-3">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="claude-3">Claude 3 Sonnet</SelectItem>
+                          <SelectItem value="gpt-4">GPT-4</SelectItem>
+                          <SelectItem value="gemini">Gemini Pro</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label>Voice Processing</Label>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        Select voice recognition engine
+                      </p>
+                      <Select defaultValue="whisper">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="whisper">OpenAI Whisper</SelectItem>
+                          <SelectItem value="browser">Browser Native</SelectItem>
+                          <SelectItem value="azure">Azure Speech</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label>AI Suggestions</Label>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Enable intelligent task and financial suggestions
+                        </p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label>Local Processing</Label>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Process AI requests locally when possible
+                        </p>
+                      </div>
+                      <Switch />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label>Learning Mode</Label>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Allow AI to learn from your usage patterns
+                        </p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="font-medium">Current Model Status</p>
+                        <p className="text-green-600 dark:text-green-400">Claude 3 Sonnet - Active</p>
+                      </div>
+                      <div>
+                        <p className="font-medium">API Usage</p>
+                        <p className="text-gray-600 dark:text-gray-400">2,341 requests this month</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button className="w-full">
+                    Save AI Model Settings
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>

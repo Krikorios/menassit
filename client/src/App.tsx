@@ -21,6 +21,7 @@ import AIPage from "@/pages/AIPage";
 import AnalyticsPage from "@/pages/AnalyticsPage";
 import SystemMonitoringPage from "@/pages/SystemMonitoringPage";
 import SettingsPage from "@/pages/SettingsPage";
+import FocusPage from "@/pages/FocusPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -37,6 +38,7 @@ function Router() {
       <Route path="/ai" component={AIPage} />
       <Route path="/analytics" component={AnalyticsPage} />
       <Route path="/monitoring" component={SystemMonitoringPage} />
+      <Route path="/focus" component={FocusPage} />
       <Route path="/settings" component={SettingsPage} />
       <Route path="/professionals" component={ProfessionalDirectory} />
       <Route component={NotFound} />

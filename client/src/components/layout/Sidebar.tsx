@@ -18,7 +18,8 @@ import {
   Shield,
   Zap,
   Monitor,
-  UserCheck
+  UserCheck,
+  Focus
 } from "lucide-react";
 
 interface SidebarProps {
@@ -56,6 +57,11 @@ const getNavigation = (t: any) => [
     name: t('navigation.ai'),
     href: "/ai",
     icon: Brain,
+  },
+  {
+    name: t('navigation.focus'),
+    href: "/focus",
+    icon: Focus,
   },
 ];
 

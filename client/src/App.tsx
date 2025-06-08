@@ -26,6 +26,7 @@ import SystemMonitoringPage from "@/pages/SystemMonitoringPage";
 import SettingsPage from "@/pages/SettingsPage";
 import FocusPage from "@/pages/FocusPage";
 import ThemePage from "@/pages/ThemePage";
+import BenchmarkPage from "@/pages/BenchmarkPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {

@@ -89,7 +89,7 @@ export default function OnboardingPage() {
         <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4">
           <User className="w-8 h-8 text-white" />
         </div>
-        <h2 className="text-2xl font-bold mb-2">Welcome to TaskFin AI Suite!</h2>
+        <h2 className="text-2xl font-bold mb-2">Welcome to MenAssist AI Suite!</h2>
         <p className="text-muted-foreground">
           Let's set up your account to get the most out of your experience.
         </p>

@@ -68,7 +68,7 @@ export default function LandingPage() {
                 <h1 className="text-4xl lg:text-6xl font-bold text-slate-900 dark:text-white leading-tight">
                   Voice-Powered
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-secondary-600">
-                    {" "}TaskFin
+                    {" "}MenAssist
                   </span>
                 </h1>
                 

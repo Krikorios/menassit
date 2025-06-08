@@ -102,7 +102,7 @@ export default function LoginPage() {
             <Mic className="w-4 h-4 text-white" />
           </div>
           <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            TaskFin
+            MenAssist
           </span>
         </Link>
         
@@ -125,8 +125,8 @@ export default function LoginPage() {
           </CardTitle>
           <CardDescription>
             {isRegisterMode 
-              ? "Join TaskFin to manage your tasks and finances with AI" 
-              : "Sign in to your TaskFin account to access your voice-powered productivity tools"
+              ? "Join MenAssist to manage your tasks and finances with AI" 
+              : "Sign in to your MenAssist account to access your voice-powered productivity tools"
             }
           </CardDescription>
           

@@ -49,7 +49,7 @@ export default function Header() {
               <Mic className="w-4 h-4 text-white" />
             </div>
             <span className="hidden font-bold sm:inline-block bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              TaskFin
+              MenAssist
             </span>
           </Link>
         </div>

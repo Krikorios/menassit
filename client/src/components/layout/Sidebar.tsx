@@ -19,7 +19,8 @@ import {
   Zap,
   Monitor,
   UserCheck,
-  Focus
+  Focus,
+  Palette
 } from "lucide-react";
 
 interface SidebarProps {
@@ -62,6 +63,11 @@ const getNavigation = (t: any) => [
     name: t('navigation.focus'),
     href: "/focus",
     icon: Focus,
+  },
+  {
+    name: t('navigation.themes'),
+    href: "/themes",
+    icon: Palette,
   },
 ];
 

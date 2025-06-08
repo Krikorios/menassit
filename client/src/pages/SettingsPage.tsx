@@ -18,6 +18,8 @@ import { User, Bell, Shield, Palette, Moon, Sun, Globe, Download, Trash2 } from 
 export default function SettingsPage() {
   const { user, updateProfile } = useAuth();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
+  const { theme, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState({
     username: user?.username || "",

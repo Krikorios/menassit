@@ -1,19 +1,18 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
-import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import TaskList from "@/components/tasks/TaskList";
 import FinancialOverview from "@/components/financial/FinancialOverview";
 import VoiceRecorder from "@/components/voice/VoiceRecorder";
 import VoiceIndicator from "@/components/voice/VoiceIndicator";
 import DailyJoke from "@/components/ai/DailyJoke";
-import { CommandPalette } from "@/components/CommandPalette";
 import { useVoiceContext } from "@/context/VoiceProvider";
 import { useNotifications } from "@/context/NotificationProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { CardSkeleton, PageSkeleton } from "@/components/ui/loading-skeleton";
 import { 
   Calendar, 
   DollarSign, 

@@ -2,6 +2,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useVoice } from "@/hooks/useVoice";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { aiService } from "@/services/aiService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +29,7 @@ export default function LandingPage() {
   const { user } = useAuth();
   const { isListening, startListening, stopListening, isSupported } = useVoice();
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   // Redirect to dashboard if already authenticated
   if (user) {
@@ -66,15 +68,14 @@ export default function LandingPage() {
 
               <div className="space-y-4">
                 <h1 className="text-4xl lg:text-6xl font-bold text-slate-900 dark:text-white leading-tight">
-                  Voice-Powered
+                  {t('landing.heroTitle')}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-secondary-600">
                     {" "}MenAssist
                   </span>
                 </h1>
                 
                 <p className="text-xl text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Complete offline task and financial management with local AI voice processing. 
-                  No internet required, complete privacy guaranteed.
+                  {t('landing.heroSubtitle')}
                 </p>
               </div>
 
@@ -85,8 +86,8 @@ export default function LandingPage() {
                     <div className="w-8 h-8 bg-primary-100 dark:bg-primary-900/50 rounded-lg flex items-center justify-center mb-3">
                       <Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                     </div>
-                    <h4 className="font-semibold text-slate-900 dark:text-white text-sm">Task Management</h4>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Voice-powered task creation</p>
+                    <h4 className="font-semibold text-slate-900 dark:text-white text-sm">{t('landing.taskManagement')}</h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{t('landing.taskManagementDesc')}</p>
                   </CardContent>
                 </Card>
                 
@@ -95,8 +96,8 @@ export default function LandingPage() {
                     <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg flex items-center justify-center mb-3">
                       <DollarSign className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                     </div>
-                    <h4 className="font-semibold text-slate-900 dark:text-white text-sm">Financial Tracking</h4>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Automated expense logging</p>
+                    <h4 className="font-semibold text-slate-900 dark:text-white text-sm">{t('landing.financialTracking')}</h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{t('landing.financialTrackingDesc')}</p>
                   </CardContent>
                 </Card>
               </div>

@@ -315,6 +315,14 @@
     "invalidCredentials": "Invalid credentials",
     "passwordMismatch": "Passwords do not match"
   },
+  "landing": {
+    "heroTitle": "Voice-Powered",
+    "heroSubtitle": "Complete offline task and financial management with local AI voice processing. No internet required, complete privacy guaranteed.",
+    "taskManagement": "Task Management",
+    "taskManagementDesc": "Voice-powered task creation",
+    "financialTracking": "Financial Tracking", 
+    "financialTrackingDesc": "Automated expense logging"
+  },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome",

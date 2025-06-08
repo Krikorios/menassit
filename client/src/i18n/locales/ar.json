@@ -276,6 +276,14 @@
     "invalidCredentials": "بيانات اعتماد غير صحيحة",
     "passwordMismatch": "كلمات المرور غير متطابقة"
   },
+  "landing": {
+    "heroTitle": "مدعوم بالصوت",
+    "heroSubtitle": "إدارة شاملة للمهام والشؤون المالية بدون إنترنت مع معالجة ذكية محلية للصوت. لا يتطلب إنترنت، خصوصية مضمونة بالكامل.",
+    "taskManagement": "إدارة المهام",
+    "taskManagementDesc": "إنشاء المهام بالأوامر الصوتية",
+    "financialTracking": "تتبع الشؤون المالية",
+    "financialTrackingDesc": "تسجيل تلقائي للنفقات"
+  },
   "dashboard": {
     "title": "لوحة التحكم",
     "welcome": "مرحباً",

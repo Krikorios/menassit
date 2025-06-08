@@ -35,14 +35,21 @@ export default function FinancesPage() {
   const summary = (summaryResponse as any)?.summary || { income: 0, expenses: 0, net: 0 };
 
   const createRecordMutation = useMutation({
-    mutationFn: (record: typeof newRecord) =>
-      apiRequest("/api/financial/records", {
+    mutationFn: async (record: typeof newRecord) => {
+      const response = await fetch("/api/financial/records", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           ...record,
           amount: parseFloat(record.amount),
         }),
-      }),
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to create record");
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/financial/records"] });
       queryClient.invalidateQueries({ queryKey: ["/api/financial/summary"] });

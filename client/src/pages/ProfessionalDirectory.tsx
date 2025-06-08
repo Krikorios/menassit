@@ -148,8 +148,8 @@ export default function ProfessionalDirectory() {
   const filteredProfessionals = mockProfessionals.filter(professional => {
     const matchesSearch = professional.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          professional.specialization.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = !selectedType || professional.type === selectedType;
-    const matchesLocation = !selectedLocation || professional.location === selectedLocation;
+    const matchesType = !selectedType || selectedType === 'all' || professional.type === selectedType;
+    const matchesLocation = !selectedLocation || selectedLocation === 'all' || professional.location === selectedLocation;
     return matchesSearch && matchesType && matchesLocation;
   });
 
@@ -368,7 +368,7 @@ export default function ProfessionalDirectory() {
             <SelectValue placeholder={t('professionals.filterByType')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">{t('common.all')}</SelectItem>
+            <SelectItem value="all">{t('common.all')}</SelectItem>
             {professionalTypes.map(type => (
               <SelectItem key={type} value={type}>
                 {t(`professionals.types.${type}`)}
@@ -382,7 +382,7 @@ export default function ProfessionalDirectory() {
             <SelectValue placeholder={t('professionals.filterByLocation')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">{t('common.all')}</SelectItem>
+            <SelectItem value="all">{t('common.all')}</SelectItem>
             {locations.map(location => (
               <SelectItem key={location} value={location}>
                 {t(`professionals.locations.${location}`)}

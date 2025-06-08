@@ -24,8 +24,13 @@ export function LanguageSwitcher() {
     document.documentElement.lang = langCode;
     // Store in localStorage for persistence
     localStorage.setItem('language', langCode);
-    // Force re-render of components
-    window.location.reload();
+    
+    // Apply Arabic-specific optimizations
+    if (langCode === 'ar') {
+      document.body.classList.add('arabic-text');
+    } else {
+      document.body.classList.remove('arabic-text');
+    }
   };
 
   // Initialize language on component mount

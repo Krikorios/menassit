@@ -9,7 +9,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import FocusMode from "@/components/focus/FocusMode";
 
 export default function FocusPage() {
-  const { t } = useTranslation();
+  useTranslation();
   const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
 
   return (

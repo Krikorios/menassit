@@ -12,14 +12,14 @@ import { useNotifications } from "@/context/NotificationProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CardSkeleton, PageSkeleton } from "@/components/ui/loading-skeleton";
+
 import { 
   Calendar, 
   DollarSign, 
   Mic, 
   Brain, 
   Activity, 
-  TrendingUp,
+
   Zap,
   HelpCircle
 } from "lucide-react";
@@ -28,9 +28,8 @@ import { useTourManager, getMainTourSteps } from "@/components/onboarding/TourMa
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
-  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const { isListening, speak } = useVoiceContext();
-  const { unreadCount } = useNotifications();
+  useVoiceContext();
+  useNotifications();
   const { startTour } = useTourManager();
 
   const handleStartTour = () => {

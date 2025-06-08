@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import DailyJoke from "@/components/ai/DailyJoke";
 import VoiceIndicator from "@/components/voice/VoiceIndicator";
 import Header from "@/components/layout/Header";
-import { useTheme } from "@/context/ThemeContext";
+
 import { 
   Mic, 
   Volume2, 

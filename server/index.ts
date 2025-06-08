@@ -67,5 +67,8 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Initialize background task scheduler
+    taskScheduler.initialize();
   });
 })();

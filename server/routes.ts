@@ -17,6 +17,7 @@ import {
   errorTrackingMiddleware
 } from "./middleware/security";
 import { monitoringService } from "./services/monitoringService";
+import { taskScheduler } from "./services/taskScheduler";
 import { authController } from "./controllers/authController";
 import { taskController } from "./controllers/taskController";
 import { financialController } from "./controllers/financialController";
@@ -175,13 +176,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Health check endpoint
-  app.get('/api/health', (req, res) => {
-    res.json({ 
-      status: 'ok', 
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development'
-    });
+  // Enhanced health check endpoint
+  app.get('/health', async (req, res) => {
+    try {
+      const healthCheck = await monitoringService.getHealthCheck();
+      res.json(healthCheck);
+    } catch (error) {
+      res.status(500).json({ 
+        status: "unhealthy", 
+        error: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+
+  // Admin monitoring endpoints
+  app.get('/api/admin/metrics', authMiddleware, requireRole(['admin']), async (req, res) => {
+    try {
+      const metrics = await monitoringService.getSystemMetrics();
+      res.json(metrics);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch system metrics' });
+    }
+  });
+
+  app.get('/api/admin/performance', authMiddleware, requireRole(['admin', 'pro']), async (req, res) => {
+    try {
+      const performance = await monitoringService.getPerformanceMetrics();
+      res.json(performance);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch performance metrics' });
+    }
+  });
+
+  app.get('/api/admin/analytics/:timeframe?', authMiddleware, requireRole(['admin']), async (req, res) => {
+    try {
+      const timeframe = (req.params.timeframe as 'day' | 'week' | 'month') || 'day';
+      const analytics = await monitoringService.getUsageAnalytics(timeframe);
+      res.json(analytics);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch analytics data' });
+    }
+  });
+
+  app.get('/api/admin/tasks', authMiddleware, requireRole(['admin']), async (req, res) => {
+    try {
+      const tasks = taskScheduler.getTaskStatus();
+      res.json(tasks);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch task status' });
+    }
+  });
+
+  app.post('/api/admin/tasks/:taskName/execute', authMiddleware, requireRole(['admin']), async (req, res) => {
+    try {
+      const { taskName } = req.params;
+      await taskScheduler.executeTask(taskName);
+      res.json({ success: true, message: `Task ${taskName} executed successfully` });
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Task execution failed' });
+    }
   });
 
   // Apply error tracking middleware at the end

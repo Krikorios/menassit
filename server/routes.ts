@@ -443,5 +443,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(errorTrackingMiddleware);
 
   const httpServer = createServer(app);
+
+  // WebSocket server setup for real-time chat
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+
+  wss.on('connection', (ws: WebSocket) => {
+    console.log('New WebSocket connection');
+    let userId: number | null = null;
+
+    ws.on('message', (data: Buffer) => {
+      try {
+        const message = JSON.parse(data.toString());
+        
+        if (message.type === 'join' && message.userId) {
+          userId = message.userId;
+          
+          // Add connection to user's connection list
+          if (!wsConnections.has(userId)) {
+            wsConnections.set(userId, []);
+          }
+          wsConnections.get(userId)!.push(ws);
+          
+          console.log(`User ${userId} connected to WebSocket`);
+        }
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    });
+
+    ws.on('close', () => {
+      if (userId) {
+        // Remove connection from user's connection list
+        const connections = wsConnections.get(userId);
+        if (connections) {
+          const index = connections.indexOf(ws);
+          if (index > -1) {
+            connections.splice(index, 1);
+          }
+          if (connections.length === 0) {
+            wsConnections.delete(userId);
+          }
+        }
+        console.log(`User ${userId} disconnected from WebSocket`);
+      }
+    });
+
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+    });
+  });
+
   return httpServer;
 }

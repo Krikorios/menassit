@@ -34,6 +34,7 @@
     "voice": "Voice Commands",
     "analytics": "Analytics",
     "monitoring": "System Monitor",
+    "chat": "Messages",
     "settings": "Settings",
     "logout": "Logout",
     "profile": "Profile"
@@ -69,6 +70,44 @@
     "taskCreated": "Task created successfully",
     "taskUpdated": "Task updated successfully",
     "taskDeleted": "Task deleted successfully"
+  },
+  "chat": {
+    "title": "Messages",
+    "searchPlaceholder": "Search conversations...",
+    "professionalServices": "Professional Services",
+    "typeMessage": "Type a message...",
+    "welcome": "Welcome to Messages",
+    "welcomeDescription": "Select a conversation to start messaging with your contacts and professional service providers.",
+    "selectedChat": "Selected Contact",
+    "lastSeen": "Last seen",
+    "minutesAgo": "minutes ago",
+    "noMessages": "No messages yet",
+    "edited": "edited",
+    "online": "Online",
+    "offline": "Offline",
+    "newContact": "Add Contact",
+    "newGroup": "New Group",
+    "callContact": "Call",
+    "videoCall": "Video Call",
+    "moreOptions": "More Options",
+    "messageStatus": {
+      "sent": "Sent",
+      "delivered": "Delivered", 
+      "read": "Read"
+    },
+    "messageTypes": {
+      "text": "Text",
+      "image": "Image",
+      "document": "Document",
+      "voice": "Voice Message",
+      "video": "Video",
+      "location": "Location"
+    },
+    "attachments": "Attachments",
+    "voiceMessage": "Voice Message",
+    "sendMessage": "Send Message",
+    "today": "Today",
+    "yesterday": "Yesterday"
   },
   "finances": {
     "title": "Finances",

@@ -27,6 +27,7 @@ import SettingsPage from "@/pages/SettingsPage";
 import FocusPage from "@/pages/FocusPage";
 import ThemePage from "@/pages/ThemePage";
 import BenchmarkPage from "@/pages/BenchmarkPage";
+import ChatPage from "@/pages/ChatPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -45,6 +46,7 @@ function Router() {
       <Route path="/monitoring" component={SystemMonitoringPage} />
       <Route path="/focus" component={FocusPage} />
       <Route path="/themes" component={ThemePage} />
+      <Route path="/chat" component={ChatPage} />
       <Route path="/settings" component={SettingsPage} />
       <Route path="/professionals" component={ProfessionalDirectory} />
       <Route component={NotFound} />
